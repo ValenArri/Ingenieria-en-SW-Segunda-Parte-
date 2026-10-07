@@ -1,9 +1,0 @@
-{
-  "name": "mesa-abierta-tp2",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "description": "Prueba de concepto del Grupo 04: inscripción y consulta de charlas",
-  "engines": { "node": ">=20" },
-  "scripts": { "start": "node servidor.mjs", "test": "node --test tests/*.test.js" }
-}
