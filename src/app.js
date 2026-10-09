@@ -207,7 +207,7 @@ function resolverSolicitud(id, nuevoEstado) {
     repositorio.guardar({ ...estado, solicitudes });
     document.querySelector('#dialogo-postulacion').close();
     renderizar(false);
-    window.alert(
+    avisar(
       nuevoEstado === 'Aprobada'
         ? 'La postulación fue aceptada correctamente.'
         : 'La postulación fue rechazada correctamente.',
