@@ -61,17 +61,17 @@ function inicio() {
   // Reúne el estado, las charlas próximas y la información estática de bienvenida.
   return `${bandaEstado()}<section class="hero"><div class="hero-texto"><h1>POSTULATE</h1><p class="bajada">Sumate como autoridad de mesa.</p><div class="acciones"><a class="boton lima" href="#inscripcion">Quiero postularme</a><a class="enlace-claro" href="#charlas">Conocer las charlas</a></div></div></section>
   <section class="pasos-inicio" aria-label="Cómo participar"><div><span>01</span><div><h3>Conocé el rol</h3><p>Explorá las charlas y resolvé tus dudas.</p></div></div><div><span>02</span><div><h3>Completá tus datos</h3><p>Postulate en unos pocos pasos.</p></div></div><div><span>03</span><div><h3>Guardá tu comprobante</h3><p>Tu solicitud queda pendiente de evaluación.</p></div></div></section>
-  <section class="seccion"><div class="titulo-seccion"><div><p class="sobretexto">INFORMARTE TAMBIÉN ES PARTICIPAR</p><h2>Nos encontramos en las charlas.</h2></div><a class="enlace-flecha" href="#charlas">Ver todas las charlas <span aria-hidden="true">↗</span></a></div><p class="texto-secundario">Abiertas, gratuitas y sin inscripción previa. No necesitás asistir para postularte.</p><div class="grilla-charlas">${charlas.filter(c => new Date(c.fecha + 'T' + c.hora + ':00-03:00') >= fecha()).slice(0, 3).map(tarjetaCharla).join('') || '<p class="vacio">Finalizaron los encuentros de esta convocatoria. Podés consultar toda la agenda.</p>'}</div></section>
-  <section class="preguntas seccion"><div><p class="sobretexto">ANTES DE EMPEZAR</p><h2>Participar,<br>sin vueltas.</h2><p class="texto-secundario">Lo que necesitás saber para dar el primer paso.</p></div><div>${[
+  <section class="seccion"><div class="titulo-seccion"><h2>Charlas</h2><a class="enlace-flecha" href="#charlas">Ver todas las charlas</a></div><p class="texto-secundario">Charlas abiertas y gratuitas; no necesitás asistir para postularte.</p><div class="grilla-charlas">${charlas.filter(c => new Date(c.fecha + 'T' + c.hora + ':00-03:00') >= fecha()).slice(0, 3).map(tarjetaCharla).join('') || '<p class="vacio">Finalizaron los encuentros de esta convocatoria. Podés consultar toda la agenda.</p>'}</div></section>
+  <section class="preguntas seccion"><div><h2>Preguntas frecuentes</h2></div><div>${[
     ['¿Necesito haber sido autoridad de mesa?', 'No. Podés registrar tu postulación sin experiencia previa. En el formulario te preguntamos por tus antecedentes y capacitación.'],
     ['¿Es obligatorio asistir a una charla?', 'No. Las charlas son abiertas y no requieren inscripción. Asistir o indicar interés en ellas no es un requisito para postularte.'],
     ['¿Qué pasa después de postularme?', 'La solicitud queda pendiente de evaluación. Registrarte no significa que hayas sido designado. Esta prueba de concepto finaliza con el comprobante y no envía correos.'],
-    ['¿Esta inscripción es real?', 'No. Es un prototipo académico del Grupo 04. Usá datos ficticios: se guardan únicamente en este navegador y no se envían a ningún organismo.'],
+    ['¿Esta inscripción es real?', 'Es un prototipo académico, no una inscripción oficial. Usá datos ficticios; no se envían a organismos.'],
   ].map(([p, r]) => `<details><summary>${p}<span aria-hidden="true">+</span></summary><p>${r}</p></details>`).join('')}</div></section>`;
 }
 function listaCharlas() {
   // Prepara los filtros con los valores actuales y deja contenedores para los resultados.
-  return `${bandaEstado()}<section class="encabezado-pagina"><p class="sobretexto">UN ESPACIO PARA CONOCER Y PREGUNTAR</p><h1>Charlas que te acercan.</h1><p>Conocé el rol, resolvé tus dudas y encontrá una sede.<br>La entrada es libre; no necesitás anotarte ni ser postulante.</p></section><section class="seccion sin-superior"><div class="barra-filtros"><label class="buscador">Buscar charla o sede<input id="busqueda" type="search" placeholder="Nombre, tema o sede…" value="${escapar(filtros.busqueda)}"></label><label>Distrito<select id="filtro-distrito">${opciones([...new Set(sedes.map(s => s.distrito))], filtros.distrito, 'Todos los distritos')}</select></label><label>Fecha<select id="filtro-periodo"><option value="todas" ${filtros.periodo === 'todas' ? 'selected' : ''}>Todas las charlas</option><option value="proximas" ${filtros.periodo === 'proximas' ? 'selected' : ''}>Próximas charlas</option><option value="pasadas" ${filtros.periodo === 'pasadas' ? 'selected' : ''}>Charlas finalizadas</option></select></label></div><p id="cantidad" class="texto-secundario" role="status"></p><div id="lista-charlas" class="grilla-charlas"></div><div class="nota-linea">ⓘ &nbsp; Agenda ficticia para la prueba de concepto. Las sedes se muestran como referencias geográficas reales.</div></section>`;
+  return `${bandaEstado()}<section class="encabezado-pagina"><h1>Charlas</h1><p>Conocé el rol, resolvé tus dudas y encontrá una sede. No necesitás anotarte ni ser postulante para asistir.</p></section><section class="seccion sin-superior"><div class="barra-filtros"><label class="buscador">Buscar charla o sede<input id="busqueda" type="search" placeholder="Nombre, tema o sede…" value="${escapar(filtros.busqueda)}"></label><label>Distrito<select id="filtro-distrito">${opciones([...new Set(sedes.map(s => s.distrito))], filtros.distrito, 'Todos los distritos')}</select></label><label>Fecha<select id="filtro-periodo"><option value="todas" ${filtros.periodo === 'todas' ? 'selected' : ''}>Todas las charlas</option><option value="proximas" ${filtros.periodo === 'proximas' ? 'selected' : ''}>Próximas charlas</option><option value="pasadas" ${filtros.periodo === 'pasadas' ? 'selected' : ''}>Charlas finalizadas</option></select></label></div><p id="cantidad" class="texto-secundario" role="status"></p><div id="lista-charlas" class="grilla-charlas"></div></section>`;
 }
 function actualizarCharlas() {
   // Normaliza la búsqueda y aplica en conjunto texto, distrito y estado temporal.
@@ -133,13 +133,52 @@ function miSolicitud() {
   // Busca por ultimaId en el estado local y construye el comprobante correspondiente.
   const estado = repositorio.leer();
   const solicitud = estado.solicitudes.find(s => s.id === estado.ultimaId);
-  if (!solicitud) return `<section class="seccion"><div class="panel-centrado"><span class="icono-cuadro">▤</span><h1>Tu próximo paso empieza acá.</h1><p>Todavía no registraste una postulación en este navegador.</p><a class="boton oscuro" href="#inscripcion">Quiero postularme ↗</a><p class="texto-secundario">Si te postulaste desde otro dispositivo, tu comprobante está en ese navegador. Esta demo no sincroniza datos.</p></div></section>`;
-  return `<section class="seccion"><div class="comprobante panel"><div class="confirmacion-icono">✓</div><p class="sobretexto">POSTULACIÓN REGISTRADA</p><h1>Gracias por dar el primer paso,<br>${escapar(solicitud.nombre)}.</h1><p>Tu solicitud se guardó en este navegador.</p><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}<div class="aviso">Este comprobante pertenece a una prueba de concepto. No se enviaron correos ni se realizó una inscripción oficial.</div><div class="acciones"><button class="boton oscuro" id="descargar">Descargar comprobante ↓</button><a class="boton borde" href="#charlas">Explorar charlas ↗</a></div></div></section>`;
+  if (!solicitud) return `<section class="seccion"><div class="panel-centrado"><h1>Mi solicitud</h1><p>Todavía no registraste una postulación en este navegador.</p><a class="boton oscuro" href="#inscripcion">Quiero postularme</a></div></section>`;
+  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><p>Tu solicitud se guardó en este navegador.</p><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}<div class="aviso">Este comprobante pertenece a una prueba de concepto. No se enviaron correos ni se realizó una inscripción oficial.</div><div class="acciones"><button class="boton oscuro" id="descargar">Descargar comprobante</button><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
 }
 function demo() {
   // Toma el estado persistido para mostrar el escenario y los registros de prueba.
   const estado = repositorio.leer();
-  return `<section class="seccion"><div class="encabezado-pagina compacto"><p class="sobretexto">PRUEBA DE CONCEPTO · ENTREGA 2</p><h1>Una demo para explorar.</h1><p>Probá el recorrido completo, cambiá el escenario y revisá los registros locales.</p></div><div class="demo-grilla"><section class="panel"><h2>El tiempo, en tus manos.</h2><p>La fecha simulada permite presentar el prototipo sin depender del día de la exposición.</p><label>Escenario de convocatoria<select id="escenario">${[['abierta', 'Abierta · 6 de octubre de 2026'], ['futura', 'Todavía no abrió · 28 de septiembre de 2026'], ['cerrada', 'Cerrada · 31 de octubre de 2026'], ['real', 'Usar fecha y hora reales']].map(([id, nombre]) => `<option value="${id}" ${estado.escenario === id ? 'selected' : ''}>${nombre}</option>`).join('')}</select></label><div class="aviso verde">Estado actual: <b>${estadoConvocatoria(fecha())}</b></div><a class="boton oscuro" href="#inscripcion">Probar inscripción →</a></section><section class="panel"><h2>Preparada para la presentación.</h2><p>4 charlas, 3 sedes y 1 postulante ficticio inicial. No necesitás claves, cuentas ni configurar servicios.</p><p>Los mapas usan OpenStreetMap y requieren internet. Los registros permanecen en el almacenamiento local de este navegador.</p><button id="reiniciar" class="boton borde">Restablecer datos de ejemplo</button><p class="micro oscuro-texto">Esta acción borra las postulaciones de esta demo en este navegador.</p><div id="confirmar-reinicio" hidden class="aviso"><p>¿Borrar las postulaciones locales y volver al estado inicial?</p><button id="confirmar-borrado" class="boton oscuro pequeno">Sí, restablecer</button> <button id="cancelar-borrado" class="boton borde pequeno">Cancelar</button></div></section></div><section class="panel registros"><div class="titulo-seccion"><div><p class="sobretexto">PERSISTENCIA LOCAL</p><h2>Postulaciones de prueba</h2></div><span class="etiqueta">${estado.solicitudes.length} registros</span></div><p>Vista de verificación del prototipo; no es un panel de evaluación ni tiene autenticación.</p><div class="tabla-contenedor"><table><thead><tr><th>Postulante</th><th>DNI</th><th>Distrito</th><th>Estado</th></tr></thead><tbody>${estado.solicitudes.map(s => `<tr><td><b>${escapar(s.nombre)} ${escapar(s.apellido)}</b><small>${s.ejemplo ? 'Dato de ejemplo' : escapar(s.id)}</small></td><td>${escapar(s.dni)}</td><td>${escapar(s.distrito)}</td><td><span class="etiqueta">${escapar(s.estado)}</span></td></tr>`).join('')}</tbody></table></div></section></section>`;
+  return `<section class="seccion">
+    <div class="demo-grilla">
+      <section class="panel">
+        <h2>Rango de inscripción</h2>
+        <label>Escenario de convocatoria
+          <select id="escenario">
+            ${[
+              ['abierta', 'Abierta · 6 de octubre de 2026'],
+              ['futura', 'Todavía no abrió · 28 de septiembre de 2026'],
+              ['cerrada', 'Cerrada · 31 de octubre de 2026'],
+              ['real', 'Usar fecha y hora reales'],
+            ].map(([id, nombre]) => `<option value="${id}" ${estado.escenario === id ? 'selected' : ''}>${nombre}</option>`).join('')}
+          </select>
+        </label>
+        <div class="aviso verde">Estado actual: <b>${estadoConvocatoria(fecha())}</b></div>
+        <a class="boton oscuro" href="#inscripcion">Probar inscripción</a>
+      </section>
+      <section class="panel">
+        <h2>Datos de ejemplo</h2>
+        <button id="reiniciar" class="boton borde">Restablecer datos de ejemplo</button>
+        <div id="confirmar-reinicio" hidden class="aviso">
+          <p>¿Borrar las postulaciones locales y volver al estado inicial?</p>
+          <button id="confirmar-borrado" class="boton oscuro pequeno">Sí, restablecer</button>
+          <button id="cancelar-borrado" class="boton borde pequeno">Cancelar</button>
+        </div>
+      </section>
+    </div>
+    <section class="panel registros">
+      <div class="titulo-seccion">
+        <h2>Postulaciones locales</h2>
+        <span class="etiqueta">${estado.solicitudes.length} registros</span>
+      </div>
+      <div class="tabla-contenedor">
+        <table>
+          <thead><tr><th>Postulante</th><th>DNI</th><th>Distrito</th><th>Estado</th></tr></thead>
+          <tbody>${estado.solicitudes.map(s => `<tr><td><b>${escapar(s.nombre)} ${escapar(s.apellido)}</b><small>${s.ejemplo ? 'Dato de ejemplo' : escapar(s.id)}</small></td><td>${escapar(s.dni)}</td><td>${escapar(s.distrito)}</td><td><span class="etiqueta">${escapar(s.estado)}</span></td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </section>
+  </section>`;
 }
 function noEncontrado() { /* Ruta desconocida: responde con una salida segura hacia el inicio. */ return '<section class="seccion"><div class="panel-centrado"><h1>No encontramos esa página.</h1><a class="boton oscuro" href="#inicio">Volver al inicio</a></div></section>'; }
 
