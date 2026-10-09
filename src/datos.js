@@ -67,7 +67,7 @@ export const charlas = [
     id: 'c1',
     nombre: 'Tu primer paso como autoridad',
     tema: 'Introducción al rol',
-    descripcion: 'Conocé las responsabilidades de una autoridad de mesa y cómo podés participar. Un encuentro para empezar desde cero.',
+    descripcion: 'Conocé las responsabilidades de una autoridad de mesa y cómo podés participar.',
     fecha: '2026-10-01',
     hora: '18:00',
     duracion: '90 min',

@@ -1,6 +1,6 @@
 # Propuesta de modelo conceptual
 
-Borrador de apoyo para revisar e incorporar al PDF del TP2. Representa el dominio del enunciado completo; la web implementa solamente inscripción, charlas y ubicación. Los servicios de correo y mapas son actores externos, no entidades del dominio.
+Borrador de apoyo para revisar e incorporar al PDF del TP. Representa el dominio del enunciado completo; la web implementa solamente inscripción, charlas y ubicación. Los servicios de correo y mapas son actores externos, no entidades del dominio.
 
 ```mermaid
 classDiagram
