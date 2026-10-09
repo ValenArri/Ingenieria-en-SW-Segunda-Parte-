@@ -166,13 +166,70 @@ function demo() {
       </div>
       <div class="tabla-contenedor">
         <table>
-          <thead><tr><th>Postulante</th><th>DNI</th><th>Distrito</th><th>Estado</th></tr></thead>
-          <tbody>${estado.solicitudes.map(s => `<tr><td><b>${escapar(s.nombre)} ${escapar(s.apellido)}</b><small>${s.ejemplo ? 'Dato de ejemplo' : escapar(s.id)}</small></td><td>${escapar(s.dni)}</td><td>${escapar(s.distrito)}</td><td><span class="etiqueta">${escapar(s.estado)}</span></td></tr>`).join('')}</tbody>
+          <thead><tr><th>Postulante</th><th>DNI</th><th>Distrito</th><th>Estado</th><th>Acción</th></tr></thead>
+          <tbody>${estado.solicitudes.map(s => `<tr><td><b>${escapar(s.nombre)} ${escapar(s.apellido)}</b><small>${s.ejemplo ? 'Dato de ejemplo' : escapar(s.id)}</small></td><td>${escapar(s.dni)}</td><td>${escapar(s.distrito)}</td><td><span class="etiqueta">${escapar(s.estado)}</span></td><td><button type="button" class="boton borde pequeno" data-ver-postulacion="${escapar(s.id)}">Ver postulación</button></td></tr>`).join('')}</tbody>
         </table>
       </div>
     </section>
+    <dialog id="dialogo-postulacion" class="dialogo-postulacion" aria-labelledby="titulo-revision">
+      <div id="detalle-postulacion"></div>
+      <div class="acciones">
+        <button type="button" class="boton borde" id="cerrar-dialogo">Cerrar</button>
+      </div>
+    </dialog>
   </section>`;
 }
+
+function abrirRevisionSolicitud(id) {
+  const solicitud = repositorio.leer().solicitudes.find(registro => registro.id === id);
+  if (!solicitud) return;
+
+  const dialogo = document.querySelector('#dialogo-postulacion');
+  const detalle = document.querySelector('#detalle-postulacion');
+  const acciones = solicitud.estado === 'Pendiente de evaluación'
+    ? `<div class="acciones"><button type="button" class="boton oscuro" data-estado="Aprobada">Aceptada</button><button type="button" class="boton borde" data-estado="Rechazada">Rechazar</button></div>`
+    : '';
+
+  detalle.innerHTML = `<h2 id="titulo-revision">${escapar(solicitud.nombre)} ${escapar(solicitud.apellido)}</h2><p>Estado: <b>${escapar(solicitud.estado)}</b></p>${resumen(solicitud)}${acciones}`;
+  dialogo.dataset.solicitudId = solicitud.id;
+  dialogo.showModal();
+}
+
+function resolverSolicitud(id, nuevoEstado) {
+  const estado = repositorio.leer();
+  const solicitud = estado.solicitudes.find(registro => registro.id === id);
+  if (!solicitud || solicitud.estado !== 'Pendiente de evaluación') return;
+
+  try {
+    const solicitudes = estado.solicitudes.map(registro =>
+      registro.id === id ? { ...registro, estado: nuevoEstado } : registro,
+    );
+    repositorio.guardar({ ...estado, solicitudes });
+    document.querySelector('#dialogo-postulacion').close();
+    renderizar(false);
+    window.alert(
+      nuevoEstado === 'Aprobada'
+        ? 'La postulación fue aceptada correctamente.'
+        : 'La postulación fue rechazada correctamente.',
+    );
+  } catch (error) {
+    window.alert(error.message);
+  }
+}
+
+function conectarRevisionPostulaciones() {
+  document.querySelectorAll('[data-ver-postulacion]').forEach(boton => {
+    boton.addEventListener('click', () => abrirRevisionSolicitud(boton.dataset.verPostulacion));
+  });
+
+  const dialogo = document.querySelector('#dialogo-postulacion');
+  document.querySelector('#cerrar-dialogo').addEventListener('click', () => dialogo.close());
+  dialogo.addEventListener('click', evento => {
+    const boton = evento.target.closest('[data-estado]');
+    if (boton) resolverSolicitud(dialogo.dataset.solicitudId, boton.dataset.estado);
+  });
+}
+
 function noEncontrado() { /* Ruta desconocida: responde con una salida segura hacia el inicio. */ return '<section class="seccion"><div class="panel-centrado"><h1>No encontramos esa página.</h1><a class="boton oscuro" href="#inicio">Volver al inicio</a></div></section>'; }
 
 // FORMULARIO: captura, validación paso a paso y envío al servicio de dominio.
@@ -252,6 +309,7 @@ function renderizar(enfocar = true) {
     actualizarCharlas();
     for (const [selector, clave, evento] of [['#busqueda', 'busqueda', 'input'], ['#filtro-distrito', 'distrito', 'change'], ['#filtro-periodo', 'periodo', 'change']]) document.querySelector(selector).addEventListener(evento, e => { filtros[clave] = e.target.value; actualizarCharlas(); });
   }
+  if (actual === 'demo') conectarRevisionPostulaciones();
   conectarFormulario();
   document.querySelector('#escenario')?.addEventListener('change', e => {
     // Persiste el escenario elegido y vuelve a renderizar con la fecha correspondiente.

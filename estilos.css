@@ -37,3 +37,6 @@ h1,h2,h3{font-family:Arial,sans-serif;font-weight:700;letter-spacing:0}
 .formulario-panel{max-width:800px;margin:0 auto}
 .cinta span:first-child{font-size:13px;font-weight:700;letter-spacing:.4px}
 @media(max-width:760px){.cinta span:first-child{font-size:12px}}
+.dialogo-postulacion{width:min(760px,calc(100% - 32px));max-height:85vh;overflow-y:auto;border:1px solid var(--linea);padding:24px;color:var(--tinta);background:#fff}
+.dialogo-postulacion::backdrop{background:rgba(0,0,0,.45)}
+.dialogo-postulacion>.acciones{justify-content:flex-end;margin-top:24px}
