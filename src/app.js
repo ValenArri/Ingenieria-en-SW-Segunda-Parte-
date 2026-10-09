@@ -59,7 +59,7 @@ function tarjetaCharla(charla) {
 }
 function inicio() {
   // Reúne el estado, las charlas próximas y la información estática de bienvenida.
-  return `${bandaEstado()}<section class="hero"><div class="hero-texto"><p class="sobretexto">TU TIEMPO. TU COMPROMISO. TU COMUNIDAD.</p><h1>La democracia<br>también se hace<br><em>desde tu mesa.</em></h1><p class="bajada">Sumate como autoridad de mesa.<br>Un pequeño paso para vos, un gran aporte para todos.</p><div class="acciones"><a class="boton lima" href="#inscripcion">Quiero postularme <span aria-hidden="true">↗</span></a><a class="enlace-claro" href="#charlas">Conocer las charlas <span aria-hidden="true">→</span></a></div><p class="micro">Abierto a la comunidad · Sin experiencia previa requerida</p></div><div class="hero-visual"><div class="nota-flotante"><span class="circulo-check">✓</span><div>Tu participación cuenta<small>El primer paso empieza acá.</small></div></div><img src="./urna.svg" alt="Ilustración de una urna verde con una boleta marcada" width="600" height="510"><div class="sello">UN COMPROMISO<br><b>de todos.</b><span aria-hidden="true">✳</span></div></div></section>
+  return `${bandaEstado()}<section class="hero"><div class="hero-texto"><h1>POSTULATE</h1><p class="bajada">Sumate como autoridad de mesa.</p><div class="acciones"><a class="boton lima" href="#inscripcion">Quiero postularme</a><a class="enlace-claro" href="#charlas">Conocer las charlas</a></div></div></section>
   <section class="pasos-inicio" aria-label="Cómo participar"><div><span>01</span><div><h3>Conocé el rol</h3><p>Explorá las charlas y resolvé tus dudas.</p></div></div><div><span>02</span><div><h3>Completá tus datos</h3><p>Postulate en unos pocos pasos.</p></div></div><div><span>03</span><div><h3>Guardá tu comprobante</h3><p>Tu solicitud queda pendiente de evaluación.</p></div></div></section>
   <section class="seccion"><div class="titulo-seccion"><div><p class="sobretexto">INFORMARTE TAMBIÉN ES PARTICIPAR</p><h2>Nos encontramos en las charlas.</h2></div><a class="enlace-flecha" href="#charlas">Ver todas las charlas <span aria-hidden="true">↗</span></a></div><p class="texto-secundario">Abiertas, gratuitas y sin inscripción previa. No necesitás asistir para postularte.</p><div class="grilla-charlas">${charlas.filter(c => new Date(c.fecha + 'T' + c.hora + ':00-03:00') >= fecha()).slice(0, 3).map(tarjetaCharla).join('') || '<p class="vacio">Finalizaron los encuentros de esta convocatoria. Podés consultar toda la agenda.</p>'}</div></section>
   <section class="preguntas seccion"><div><p class="sobretexto">ANTES DE EMPEZAR</p><h2>Participar,<br>sin vueltas.</h2><p class="texto-secundario">Lo que necesitás saber para dar el primer paso.</p></div><div>${[
@@ -223,7 +223,7 @@ function renderizar(enfocar = true) {
   };
   // Renderiza la función de vista y sincroniza el título del documento.
   contenido.innerHTML = (vistas[actual] || noEncontrado)();
-  document.title = `${({ inicio: 'Tu participación cuenta', charlas: 'Charlas y sedes', charla: 'Detalle de charla', inscripcion: 'Postulate', 'mi-solicitud': 'Mi solicitud', demo: 'Explorar la demo' })[actual] || 'Página no encontrada'} · Mesa Abierta`;
+    document.title = `${({ inicio: 'Postulate', charlas: 'Charlas y sedes', charla: 'Detalle de charla', inscripcion: 'Postulate', 'mi-solicitud': 'Mi solicitud', demo: 'Explorar la demo' })[actual] || 'Página no encontrada'} · Mesa Abierta`;
   if (actual === 'charlas') {
     // Los controles actualizan filtros y vuelven a calcular la lista sin cambiar de ruta.
     actualizarCharlas();
