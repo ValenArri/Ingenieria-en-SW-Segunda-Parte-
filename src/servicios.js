@@ -142,7 +142,7 @@ export function registrarSolicitud(datos, repositorio, fecha) {
   );
   if (duplicada) {
     throw new Error(
-      'Ya existe una postulación con ese DNI en esta convocatoria y navegador. Revisá Mi solicitud o usá otro DNI ficticio.',
+      'Ya existe una postulación con ese DNI',
     );
   }
 

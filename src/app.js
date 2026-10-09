@@ -99,7 +99,7 @@ function detalleCharla(id) {
   const sede = sedeDe(charla);
   const limites = [sede.longitud - .009, sede.latitud - .006, sede.longitud + .009, sede.latitud + .006].join(',');
   const enlaceMapa = `https://www.openstreetmap.org/?mlat=${sede.latitud}&mlon=${sede.longitud}#map=16/${sede.latitud}/${sede.longitud}`;
-  return `<section class="seccion"><a class="volver" href="#charlas">← Todas las charlas</a><div class="detalle-grilla"><article><p class="sobretexto">${charla.etiqueta} · ENCUENTRO PRESENCIAL</p><h1>Ubicación de la charla</h1><p class="bajada">${charla.descripcion}</p><div class="ficha"><div><span>FECHA Y HORARIO</span><strong>${formatoFecha(charla.fecha)} · ${charla.hora} h</strong><p>Duración estimada: ${charla.duracion}</p></div><div><span>TEMA DEL ENCUENTRO</span><strong>${charla.tema}</strong></div><div><span>SEDE</span><strong>${sede.nombre}</strong><p>${sede.direccion}<br>${sede.distrito}</p></div></div><div class="aviso verde">Entrada libre y gratuita. No se requiere inscripción ni asistencia para postularte.</div><a href="#inscripcion" class="boton oscuro">Quiero postularme <span aria-hidden="true">↗</span></a></article><aside class="mapa-tarjeta"><div class="mapa-titulo"><span class="icono-cuadro">⌖</span><div><h2>Encontrá la sede</h2><p>${sede.nombre}</p></div></div><iframe title="Mapa de ${sede.nombre}" src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(limites)}&layer=mapnik&marker=${sede.latitud}%2C${sede.longitud}" referrerpolicy="no-referrer" loading="eager"></iframe><div class="mapa-pie"><p>${sede.direccion}</p><a class="enlace-flecha" href="${enlaceMapa}" target="_blank" rel="noopener noreferrer">Abrir en OpenStreetMap ↗</a></div></aside></div></section>`;
+  return `<section class="seccion"><a class="volver" href="#charlas">← Todas las charlas</a><div class="detalle-grilla"><article><p class="sobretexto">${charla.etiqueta} · ENCUENTRO PRESENCIAL</p><h1>${charla.nombre}</h1><p class="bajada">${charla.descripcion}</p><div class="ficha"><div><span>FECHA Y HORARIO</span><strong>${formatoFecha(charla.fecha)} · ${charla.hora} h</strong><p>Duración estimada: ${charla.duracion}</p></div><div><span>TEMA DEL ENCUENTRO</span><strong>${charla.tema}</strong></div><div><span>SEDE</span><strong>${sede.nombre}</strong><p>${sede.direccion}<br>${sede.distrito}</p></div></div><div class="aviso verde">Entrada libre y gratuita. No se requiere inscripción ni asistencia para postularte.</div><a href="#inscripcion" class="boton oscuro">Quiero postularme <span aria-hidden="true">↗</span></a></article><aside class="mapa-tarjeta"><div class="mapa-titulo"><span class="icono-cuadro">⌖</span><div><h2>Encontrá la sede</h2><p>${sede.nombre}</p></div></div><iframe title="Mapa de ${sede.nombre}" src="https://www.openstreetmap.org/export/embed.html?bbox=${encodeURIComponent(limites)}&layer=mapnik&marker=${sede.latitud}%2C${sede.longitud}" referrerpolicy="no-referrer" loading="eager"></iframe><div class="mapa-pie"><p>${sede.direccion}</p><a class="enlace-flecha" href="${enlaceMapa}" target="_blank" rel="noopener noreferrer">Abrir en OpenStreetMap ↗</a></div></aside></div></section>`;
 }
 
 // Construcción de campos reutilizables y resumen de confirmación.
@@ -127,7 +127,7 @@ function miSolicitud() {
   const estado = repositorio.leer();
   const solicitud = estado.solicitudes.find(s => s.id === estado.ultimaId);
   if (!solicitud) return `<section class="seccion"><div class="panel-centrado"><h1>Mi solicitud</h1><p>Todavía no registraste una postulación en este navegador.</p><a class="boton oscuro" href="#inscripcion">Quiero postularme</a></div></section>`;
-  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}<div class="aviso">Este comprobante pertenece a una prueba de concepto. No se enviaron correos ni se realizó una inscripción oficial.</div><div class="acciones"><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
+  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}<div class="acciones"><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
 }
 function demo() {
   // Toma el estado persistido para mostrar el escenario y los registros de prueba.
@@ -243,7 +243,10 @@ function renderizar(enfocar = true) {
   };
   // Renderiza la función de vista y sincroniza el título del documento.
   contenido.innerHTML = (vistas[actual] || noEncontrado)();
-    document.title = `${({ inicio: 'Postulate', charlas: 'Charlas y sedes', charla: 'Ubicación de la charla', inscripcion: 'Postulate', 'mi-solicitud': 'Mi solicitud', demo: 'Explorar la demo' })[actual] || 'Página no encontrada'} · Mesa Abierta`;
+    const tituloVista = actual === 'charla'
+      ? charlas.find(charla => charla.id === id)?.nombre
+      : ({ inicio: 'Postulate', charlas: 'Charlas y sedes', inscripcion: 'Postulate', 'mi-solicitud': 'Mi solicitud', demo: 'Explorar la demo' })[actual];
+    document.title = `${tituloVista || 'Página no encontrada'} · Mesa Abierta`;
   if (actual === 'charlas') {
     // Los controles actualizan filtros y vuelven a calcular la lista sin cambiar de ruta.
     actualizarCharlas();

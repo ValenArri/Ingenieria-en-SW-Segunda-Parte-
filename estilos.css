@@ -35,3 +35,5 @@ h1,h2,h3{font-family:Arial,sans-serif;font-weight:700;letter-spacing:0}
 @media(max-width:760px){.hero h1{font-size:40px}.hero-texto{padding:20px 0}.pasos-inicio>div{padding:10px 0}}
 .inscripcion-grilla{display:block;max-width:960px;padding-top:30px}
 .formulario-panel{max-width:800px;margin:0 auto}
+.cinta span:first-child{font-size:13px;font-weight:700;letter-spacing:.4px}
+@media(max-width:760px){.cinta span:first-child{font-size:12px}}
