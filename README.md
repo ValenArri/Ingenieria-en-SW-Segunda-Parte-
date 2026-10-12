@@ -40,7 +40,7 @@ En GitHub Pages solo se sirven archivos estáticos: **no se ejecuta el servidor 
 - Inscripción en tres pasos: datos personales, antecedentes e interés opcional, revisión y envío.
 - Validaciones, incluida fecha de nacimiento obligatoria y edad mínima de 16 años, mensajes accesibles y unicidad de inscripción por DNI y convocatoria.
 - Comprobante descargable en texto y recuperación de la última inscripción desde el mismo navegador.
-- Pantalla **Explorar la demo**, al pie, para seleccionar convocatorias 2026, 2027 y 2028, cambiar el escenario temporal y consultar las inscripciones correspondientes a cada período. La revisión se habilita al cierre de la convocatoria elegida; al rechazar, permite guardar y consultar el motivo.
+- Pantalla **Explorar la demo**, al pie, para seleccionar convocatorias 2026, 2027 y 2028, con tres inscripciones de ejemplo en cada período; permite cambiar el escenario temporal y consultar las inscripciones correspondientes. La revisión se habilita al cierre de la convocatoria elegida; al rechazar, permite guardar y consultar el motivo.
 
 ## Guion rápido para presentar
 
@@ -93,6 +93,6 @@ MODELO-CONCEPTUAL.md Propuesta de dominio editable en Mermaid
 npm test
 ```
 
-Incluye diecisiete pruebas de límites y escenarios de convocatoria, campos inválidos, afiliación, edad mínima, inscripción sin charlas, unicidad por período, revisión y rechazo, persistencia, errores de guardado y recuperación/migración. Para comprobaciones visuales: revisar inicio, agenda, mapa y formulario a 390 px y 1440 px; recorrer el guion anterior.
+Incluye dieciocho pruebas de límites y escenarios de convocatoria, datos de ejemplo por período, campos inválidos, afiliación, edad mínima, inscripción sin charlas, unicidad por período, revisión y rechazo, persistencia, errores de guardado y recuperación/migración. Para comprobaciones visuales: revisar inicio, agenda, mapa y formulario a 390 px y 1440 px; recorrer el guion anterior.
 
 Los documentos Markdown son material de apoyo. El enunciado exige un **PDF de entrega**, que el grupo debe completar con su modelo conceptual y el apartado del flujo, e incorporar la URL real una vez publicado. Este paquete no se presenta como el PDF final de la entrega.

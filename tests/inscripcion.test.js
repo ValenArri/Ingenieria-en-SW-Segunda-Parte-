@@ -44,6 +44,17 @@ test('la convocatoria respeta los límites exactos en hora argentina', () => {
   assert.equal(estadoConvocatoria(new Date('2026-10-30T23:59:59.999-03:00')), 'Inscripción abierta');
   assert.equal(estadoConvocatoria(new Date('2026-10-31T00:00:00-03:00')), 'Convocatoria cerrada');
 });
+
+test('hay tres inscripciones de ejemplo para cada convocatoria', () => {
+  for (const periodo of convocatorias) {
+    assert.equal(
+      ejemplos.filter(inscripcion => inscripcion.convocatoriaId === periodo.id).length,
+      3,
+      `Se esperaban tres inscripciones de ejemplo para ${periodo.nombre}.`,
+    );
+  }
+});
+
 test('se puede registrar sin experiencia, capacitación ni interés en charlas', () => {
   assert.deepEqual(validar(datos, fechaActual('abierta')), {});
 
