@@ -88,8 +88,20 @@ export function validar(datos, fecha, paso = null) {
       !Number.isNaN(+nacimiento) &&
       nacimiento.toISOString().slice(0, 10) === datos.nacimiento;
     const nacimientoEnRango = nacimiento <= fecha && nacimiento.getFullYear() >= 1900;
+    const partesFechaActual = Object.fromEntries(
+      new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).formatToParts(fecha).map(({ type, value }) => [type, value]),
+    );
+    const fechaMinima16 = `${Number(partesFechaActual.year) - 16}-${partesFechaActual.month}-${partesFechaActual.day}`;
+    const edadMinimaCumplida = datos.nacimiento <= fechaMinima16;
     if (!formatoNacimientoValido || !fechaNacimientoValida || !nacimientoEnRango) {
       errores.nacimiento = 'Ingresá una fecha de nacimiento válida, no futura.';
+    } else if (!edadMinimaCumplida) {
+      errores.nacimiento = 'Tenés que tener al menos 16 años para postularte.';
     }
 
     for (const campo of ['nombre', 'apellido', 'direccion']) {
@@ -162,4 +174,33 @@ export function registrarSolicitud(datos, repositorio, fecha) {
     ultimaId: solicitud.id,
   });
   return solicitud;
+}
+
+export function resolverSolicitud(id, nuevoEstado, motivo, repositorio) {
+  if (!['Aprobada', 'Rechazada'].includes(nuevoEstado)) {
+    throw new Error('Seleccioná un estado de resolución válido.');
+  }
+
+  const motivoNormalizado = typeof motivo === 'string' ? motivo.trim() : '';
+  if (nuevoEstado === 'Rechazada' && !motivoNormalizado) {
+    throw new Error('Ingresá el motivo del rechazo.');
+  }
+
+  const estado = repositorio.leer();
+  const solicitud = estado.solicitudes.find(registro => registro.id === id);
+  if (!solicitud || solicitud.estado !== 'Pendiente de evaluación') {
+    throw new Error('La postulación ya no está pendiente de evaluación.');
+  }
+
+  const solicitudes = estado.solicitudes.map(registro => {
+    if (registro.id !== id) return registro;
+
+    const resuelta = { ...registro, estado: nuevoEstado };
+    if (nuevoEstado === 'Rechazada') resuelta.motivo = motivoNormalizado;
+    else delete resuelta.motivo;
+    return resuelta;
+  });
+
+  repositorio.guardar({ ...estado, solicitudes });
+  return solicitudes.find(registro => registro.id === id);
 }

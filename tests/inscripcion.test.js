@@ -7,6 +7,7 @@ import {
   validar,
   normalizar,
   registrarSolicitud,
+  resolverSolicitud,
 } from '../src/servicios.js';
 import { distritos } from '../src/datos.js';
 
@@ -64,6 +65,35 @@ test('normaliza DNI y correo e impide duplicar una inscripción', () => {
   assert.throws(() => registrarSolicitud(datos, repo, fechaActual('abierta')), /Ya existe/);
 });
 
+test('al rechazar guarda el motivo y al aprobar no lo agrega', () => {
+  const repo = crearRepositorio(crearAlmacenamiento());
+
+  const rechazada = resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', '  Datos incompletos.  ', repo);
+  assert.equal(rechazada.estado, 'Rechazada');
+  assert.equal(rechazada.motivo, 'Datos incompletos.');
+
+  repo.reiniciar();
+  const aprobada = resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo);
+  assert.equal(aprobada.estado, 'Aprobada');
+  assert.equal(Object.hasOwn(aprobada, 'motivo'), false);
+});
+
+test('no permite rechazar sin un motivo ni resolver una postulación dos veces', () => {
+  const repo = crearRepositorio(crearAlmacenamiento());
+
+  assert.throws(
+    () => resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', '  ', repo),
+    /Ingresá el motivo/,
+  );
+  assert.equal(repo.leer().solicitudes[0].estado, 'Pendiente de evaluación');
+
+  resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo);
+  assert.throws(
+    () => resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', 'Motivo', repo),
+    /ya no está pendiente/,
+  );
+});
+
 test('bloquea registros futuros o cerrados incluso con datos válidos', () => {
   for (const escenario of ['futura', 'cerrada']) {
     assert.throws(
@@ -90,6 +120,20 @@ test('valida correo, DNI, teléfono, distrito, fechas inválidas y campos vacío
 
   for (const campo of ['correo', 'dni', 'telefono', 'distrito', 'nacimiento', 'nombre']) assert.ok(errores[campo]);
   assert.ok(validar({ ...datos, nacimiento: '2027-01-01' }, fechaActual('abierta')).nacimiento);
+});
+
+test('requiere fecha de nacimiento y que la persona tenga al menos 16 años', () => {
+  const fechaInscripcion = fechaActual('abierta');
+
+  assert.ok(validar({ ...datos, nacimiento: '' }, fechaInscripcion).nacimiento);
+  assert.deepEqual(
+    validar({ ...datos, nacimiento: '2010-10-06' }, fechaInscripcion),
+    {},
+  );
+  assert.match(
+    validar({ ...datos, nacimiento: '2010-10-07' }, fechaInscripcion).nacimiento,
+    /al menos 16 años/,
+  );
 });
 
 test('la afiliación requiere partido y no excluye al postulante', () => {

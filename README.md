@@ -38,9 +38,9 @@ En GitHub Pages solo se sirven archivos estáticos: **no se ejecuta el servidor 
 - Búsqueda por nombre, tema o sede; filtros por distrito y por fecha.
 - Detalle con nombre y dirección de la sede y mapa interactivo externo de OpenStreetMap, sin API key.
 - Inscripción en tres pasos: datos personales, antecedentes e interés opcional, revisión y envío.
-- Validaciones, mensajes accesibles y detección de DNI repetido en la convocatoria local.
+- Validaciones, incluida fecha de nacimiento obligatoria y edad mínima de 16 años, mensajes accesibles y detección de DNI repetido en la convocatoria local.
 - Comprobante descargable en texto y recuperación de la última solicitud desde el mismo navegador.
-- Pantalla **Explorar la demo**, al pie, para revisar registros, cambiar la fecha simulada o restablecer los ejemplos con confirmación.
+- Pantalla **Explorar la demo**, al pie, para revisar registros, cambiar la fecha simulada o restablecer los ejemplos con confirmación. Al rechazar una postulación, permite guardar y consultar el motivo del rechazo.
 
 ## Guion rápido para presentar
 
@@ -93,6 +93,6 @@ MODELO-CONCEPTUAL.md Propuesta de dominio editable en Mermaid
 npm test
 ```
 
-Incluye nueve pruebas de límites de convocatoria, campos inválidos, afiliación, inscripción sin charlas, duplicados, persistencia, errores de guardado y recuperación. Para comprobaciones visuales: revisar inicio, agenda, mapa y formulario a 390 px y 1440 px; recorrer el guion anterior.
+Incluye once pruebas de límites de convocatoria, campos inválidos, afiliación, inscripción sin charlas, revisión y rechazo de postulaciones, duplicados, persistencia, errores de guardado y recuperación. Para comprobaciones visuales: revisar inicio, agenda, mapa y formulario a 390 px y 1440 px; recorrer el guion anterior.
 
 Los documentos Markdown son material de apoyo. El enunciado exige un **PDF de entrega**, que el grupo debe completar con su modelo conceptual y el apartado del flujo, e incorporar la URL real una vez publicado. Este paquete no se presenta como el PDF final de la entrega.

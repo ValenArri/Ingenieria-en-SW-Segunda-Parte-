@@ -35,7 +35,7 @@ La consulta de charlas también está disponible fuera del período de inscripci
 - **Reloj de exposición:** se usa inicialmente una fecha simulada dentro del período. La interfaz informa el modo y permite cambiarlo a fecha real, previa o posterior.
 - **Cierre:** se adopta el final del día de la última charla como fecha límite. La validación ocurre tanto al abrir como al confirmar el formulario. No se implementan tareas en segundo plano ni reportes posteriores al cierre.
 - **DNI:** se asume una sola postulación por DNI y convocatoria dentro del almacenamiento local. No se consulta un padrón ni se verifica identidad.
-- **Elegibilidad:** no se inventan restricciones de edad, experiencia, capacitación o afiliación ausentes del enunciado. Se valida que la fecha de nacimiento sea real y no futura; el límite técnico inferior del selector es 1900.
+- **Elegibilidad:** se requiere fecha de nacimiento válida y una edad mínima de 16 años al momento de postularse. No se exige experiencia, capacitación ni afiliación. El límite técnico inferior del selector es 1900.
 - **Datos:** fechas, actividades y postulante inicial son ficticios. Las sedes se utilizan como referencias reales, sin afirmar que haya actividades allí.
 
 ## Fuera de alcance de esta implementación

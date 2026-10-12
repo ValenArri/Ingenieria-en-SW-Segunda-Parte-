@@ -1,6 +1,6 @@
 import { charlas, sedes, distritos, convocatoria } from './datos.js';
 import { crearRepositorio } from './repositorio.js';
-import { fechaActual, estadoConvocatoria, normalizar, validar, registrarSolicitud } from './servicios.js';
+import { fechaActual, estadoConvocatoria, normalizar, validar, registrarSolicitud, resolverSolicitud as resolverSolicitudDominio } from './servicios.js';
 
 // INICIALIZACIÓN Y ESTADO DE LA INTERFAZ
 const almacenamiento = {
@@ -127,7 +127,10 @@ function miSolicitud() {
   const estado = repositorio.leer();
   const solicitud = estado.solicitudes.find(s => s.id === estado.ultimaId);
   if (!solicitud) return `<section class="seccion"><div class="panel-centrado"><h1>Mi solicitud</h1><p>Todavía no registraste una postulación en este navegador.</p><a class="boton oscuro" href="#inscripcion">Quiero postularme</a></div></section>`;
-  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}<div class="acciones"><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
+  const motivo = solicitud.estado === 'Rechazada' && solicitud.motivo
+    ? `<div class="aviso"><b>Motivo del rechazo</b><p>${escapar(solicitud.motivo)}</p></div>`
+    : '';
+  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}${motivo}<div class="acciones"><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
 }
 function demo() {
   // Toma el estado persistido para mostrar el escenario y los registros de prueba.
@@ -187,24 +190,20 @@ function abrirRevisionSolicitud(id) {
   const dialogo = document.querySelector('#dialogo-postulacion');
   const detalle = document.querySelector('#detalle-postulacion');
   const acciones = solicitud.estado === 'Pendiente de evaluación'
-    ? `<div class="acciones"><button type="button" class="boton oscuro" data-estado="Aprobada">Aceptada</button><button type="button" class="boton borde" data-estado="Rechazada">Rechazar</button></div>`
+    ? `<div class="acciones"><button type="button" class="boton oscuro" data-estado="Aprobada">Aceptada</button><button type="button" class="boton borde" data-iniciar-rechazo>Rechazar</button></div>`
     : '';
 
-  detalle.innerHTML = `<h2 id="titulo-revision">${escapar(solicitud.nombre)} ${escapar(solicitud.apellido)}</h2><p>Estado: <b>${escapar(solicitud.estado)}</b></p>${resumen(solicitud)}${acciones}`;
+  const motivo = solicitud.estado === 'Rechazada' && solicitud.motivo
+    ? `<div class="aviso"><b>Motivo del rechazo</b><p>${escapar(solicitud.motivo)}</p></div>`
+    : '';
+  detalle.innerHTML = `<h2 id="titulo-revision">${escapar(solicitud.nombre)} ${escapar(solicitud.apellido)}</h2><p>Estado: <b>${escapar(solicitud.estado)}</b></p>${resumen(solicitud)}${motivo}${acciones}`;
   dialogo.dataset.solicitudId = solicitud.id;
-  dialogo.showModal();
+  if (!dialogo.open) dialogo.showModal();
 }
 
-function resolverSolicitud(id, nuevoEstado) {
-  const estado = repositorio.leer();
-  const solicitud = estado.solicitudes.find(registro => registro.id === id);
-  if (!solicitud || solicitud.estado !== 'Pendiente de evaluación') return;
-
+function resolverSolicitud(id, nuevoEstado, motivo = '') {
   try {
-    const solicitudes = estado.solicitudes.map(registro =>
-      registro.id === id ? { ...registro, estado: nuevoEstado } : registro,
-    );
-    repositorio.guardar({ ...estado, solicitudes });
+    resolverSolicitudDominio(id, nuevoEstado, motivo, repositorio);
     document.querySelector('#dialogo-postulacion').close();
     renderizar(false);
     avisar(
@@ -217,6 +216,42 @@ function resolverSolicitud(id, nuevoEstado) {
   }
 }
 
+function solicitarMotivoRechazo(dialogo) {
+  const acciones = document.querySelector('#detalle-postulacion .acciones');
+  acciones.outerHTML = `<form id="formulario-rechazo" class="formulario-rechazo" novalidate>
+    <label for="motivo-rechazo">Motivo del rechazo <span class="requerido">*</span></label>
+    <textarea id="motivo-rechazo" name="motivo" rows="4" required aria-describedby="error-motivo-rechazo"></textarea>
+    <small class="error-campo" id="error-motivo-rechazo" role="alert"></small>
+    <div class="acciones">
+      <button type="button" class="boton borde" data-cancelar-rechazo>Volver</button>
+      <button type="submit" class="boton oscuro">Confirmar rechazo</button>
+    </div>
+  </form>`;
+  document.querySelector('#motivo-rechazo').focus();
+  document.querySelector('[data-cancelar-rechazo]').addEventListener('click', () => {
+    abrirRevisionSolicitud(dialogo.dataset.solicitudId);
+  });
+  const formulario = document.querySelector('#formulario-rechazo');
+  const campo = document.querySelector('#motivo-rechazo');
+  campo.addEventListener('input', () => {
+    if (campo.value.trim()) {
+      campo.removeAttribute('aria-invalid');
+      document.querySelector('#error-motivo-rechazo').textContent = '';
+    }
+  });
+  formulario.addEventListener('submit', evento => {
+    evento.preventDefault();
+    const motivo = campo.value.trim();
+    if (!motivo) {
+      document.querySelector('#error-motivo-rechazo').textContent = 'Ingresá el motivo del rechazo.';
+      campo.setAttribute('aria-invalid', 'true');
+      campo.focus();
+      return;
+    }
+    resolverSolicitud(dialogo.dataset.solicitudId, 'Rechazada', motivo);
+  });
+}
+
 function conectarRevisionPostulaciones() {
   document.querySelectorAll('[data-ver-postulacion]').forEach(boton => {
     boton.addEventListener('click', () => abrirRevisionSolicitud(boton.dataset.verPostulacion));
@@ -225,6 +260,11 @@ function conectarRevisionPostulaciones() {
   const dialogo = document.querySelector('#dialogo-postulacion');
   document.querySelector('#cerrar-dialogo').addEventListener('click', () => dialogo.close());
   dialogo.addEventListener('click', evento => {
+    const iniciarRechazo = evento.target.closest('[data-iniciar-rechazo]');
+    if (iniciarRechazo) {
+      solicitarMotivoRechazo(dialogo);
+      return;
+    }
     const boton = evento.target.closest('[data-estado]');
     if (boton) resolverSolicitud(dialogo.dataset.solicitudId, boton.dataset.estado);
   });
