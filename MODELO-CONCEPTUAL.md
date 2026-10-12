@@ -45,7 +45,7 @@ class Postulacion {
   cumplioCapacitacion
   esAfiliado
   partidoDeclarado
-  estado
+  estadoPostulacion
 }
 class Inscripcion {
   identificador
@@ -55,7 +55,7 @@ class Inscripcion {
 }
 class Evaluacion {
   fecha
-  resultado
+  resultadoEvaluacion
   motivoRechazo
 }
 class Administrador {
@@ -81,11 +81,11 @@ Administrador "1" -- "0..*" Convocatoria : administra
 - **Charla:** actividad de orientación con nombre, tema, fecha y horario; pertenece a una convocatoria y ocurre en una sede. Una sede puede albergar varias charlas.
 - **Sede:** nombre y dirección del lugar. Las coordenadas permiten ubicarla mediante el servicio externo.
 - **Ciudadano:** identidad de la persona. Puede presentar distintas postulaciones.
-- **Postulación:** solicitud de un ciudadano con sus datos de contacto, antecedentes, distrito, intereses y estado de revisión. Cada postulación concreta se registra en un período mediante una inscripción.
+- **Postulación:** solicitud de un ciudadano con sus datos de contacto, antecedentes, distrito, intereses y `estadoPostulacion`, que representa su situación dentro del flujo. Cada postulación concreta se registra en un período mediante una inscripción.
 - **Inscripción:** entidad intermedia que vincula exactamente una postulación con exactamente una convocatoria y conserva la fecha de inscripción. La combinación de ciudadano y convocatoria no puede repetirse; el mismo DNI puede postularse de nuevo en otra convocatoria.
 - **Distrito electoral:** referencia seleccionada obligatoriamente al postularse. No se infiere a partir de la sede de una charla.
 - **Interés en charla:** relación opcional de muchos a muchos. Solo pueden elegirse charlas de la misma convocatoria. No representa reserva, inscripción a la charla ni asistencia.
-- **Evaluación:** resultado administrativo posterior al cierre. Una postulación puede no estar evaluada o tener una evaluación. El motivo es obligatorio si se rechaza.
+- **Evaluación:** decisión administrativa posterior al cierre, expresada en `resultadoEvaluacion`. Una postulación puede no estar evaluada o tener una evaluación. El motivo es obligatorio si el resultado es rechazo. `estadoPostulacion` describe la situación de la solicitud; `resultadoEvaluacion` guarda la decisión tomada por el administrador.
 - **Administrador:** responsable de las convocatorias y de la evaluación. Las operaciones administrativas no están implementadas en esta web.
 
 ## Restricciones

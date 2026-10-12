@@ -57,7 +57,7 @@ En GitHub Pages solo se sirven archivos estáticos: **no se ejecuta el servidor 
 
 La convocatoria de ejemplo va del **1/10/2026 a las 00:00 al 30/10/2026 a las 23:59:59.999**, zona UTC−03:00. Coincide con las fechas de la primera y última charla. Se asume que el cierre incluye el día completo de la última charla.
 
-Por defecto la aplicación simula el **6/10/2026** para que la presentación siga funcionando después de octubre. Se anuncia expresamente en la interfaz. En la demo podés elegir fecha real, antes de la apertura o después del cierre. La inscripción verifica el plazo al entrar y nuevamente al enviar; el estado también se actualiza cada 15 segundos y al volver a la pestaña. No hay un proceso servidor ejecutándose cuando se cierra el navegador.
+Por defecto la aplicación simula el **6/10/2026** para que la presentación siga funcionando después de octubre. Se anuncia expresamente en la interfaz. En la demo podés simular el período abierto, el día previo a la apertura o el día posterior al cierre. La inscripción verifica el plazo al entrar y nuevamente al enviar; el estado también se actualiza cada 15 segundos y al volver a la pestaña. No hay un proceso servidor ejecutándose cuando se cierra el navegador.
 
 Los datos se guardan bajo la clave `mesa-abierta-v1` de **localStorage**. Persisten al recargar en el mismo origen y navegador. No se comparten con otros visitantes, dispositivos o navegadores; borrar los datos del sitio borra las inscripciones. Una persona puede inscribirse en distintas convocatorias con el mismo DNI, pero solo una vez por convocatoria. El comprobante corresponde a la última inscripción creada en ese navegador. La vista de demo permite comprobar todos los registros locales.
 

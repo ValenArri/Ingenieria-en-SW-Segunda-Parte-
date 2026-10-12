@@ -162,7 +162,6 @@ function demo() {
               ['abierta', 'Abierta · día 6 del período'],
               ['futura', 'Todavía no abrió · día anterior al inicio'],
               ['cerrada', 'Cerrada · día posterior al cierre'],
-              ['real', 'Usar fecha y hora reales'],
             ].map(([id, nombre]) => `<option value="${id}" ${estado.escenario === id ? 'selected' : ''}>${nombre}</option>`).join('')}
           </select>
         </label>
