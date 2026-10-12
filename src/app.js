@@ -138,10 +138,7 @@ function miSolicitud() {
   const estado = repositorio.leer();
   const solicitud = estado.inscripciones.find(s => s.id === estado.ultimaId);
   if (!solicitud) return `<section class="seccion"><div class="panel-centrado"><h1>Mi solicitud</h1><p>Todavía no registraste una postulación en este navegador.</p><a class="boton oscuro" href="#inscripcion">Quiero postularme</a></div></section>`;
-  const motivo = solicitud.estado === 'Rechazada' && solicitud.motivo
-    ? `<div class="aviso"><b>Motivo del rechazo</b><p>${escapar(solicitud.motivo)}</p></div>`
-    : '';
-  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b><span class="etiqueta">${escapar(solicitud.estado)}</span></div>${resumen(solicitud)}${motivo}<div class="acciones"><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
+  return `<section class="seccion"><div class="comprobante panel"><h1>Postulación registrada</h1><div class="codigo"><span>NÚMERO DE COMPROBANTE</span><b>${escapar(solicitud.id)}</b></div>${resumen(solicitud)}<div class="acciones"><a class="boton borde" href="#charlas">Explorar charlas</a></div></div></section>`;
 }
 function demo() {
   // Toma el estado persistido para mostrar el escenario y los registros de prueba.

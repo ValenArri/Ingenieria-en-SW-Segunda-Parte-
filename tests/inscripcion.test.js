@@ -54,6 +54,11 @@ test('se puede registrar sin experiencia, capacitación ni interés en charlas',
   assert.equal(solicitud.estado, 'Pendiente de evaluación');
   assert.equal(crearRepositorio(almacen).leer().ultimaId, solicitud.id);
   assert.equal(repo.leer().inscripciones.length, ejemplos.length + 1);
+  const guardado = JSON.parse(almacen.getItem('mesa-abierta-v1'));
+  const postulacionGuardada = guardado.postulaciones.find(postulacion => postulacion.id === solicitud.id);
+  const inscripcionGuardada = guardado.inscripciones.find(inscripcion => inscripcion.postulacionId === solicitud.id);
+  assert.equal(postulacionGuardada.ciudadanoDni, solicitud.dni);
+  assert.equal(inscripcionGuardada.convocatoriaId, convocatoria.id);
 });
 
 test('normaliza DNI y correo e impide duplicar una inscripción', () => {
@@ -66,7 +71,8 @@ test('normaliza DNI y correo e impide duplicar una inscripción', () => {
 });
 
 test('permite al mismo DNI inscribirse en convocatorias distintas, una vez por cada una', () => {
-  const repo = crearRepositorio(crearAlmacenamiento());
+  const almacen = crearAlmacenamiento();
+  const repo = crearRepositorio(almacen);
   const convocatoriaSiguiente = {
     id: 'conv-2027',
     inicio: '2027-10-01T00:00:00-03:00',
@@ -80,6 +86,9 @@ test('permite al mismo DNI inscribirse en convocatorias distintas, una vez por c
   assert.equal(otraInscripcion.dni, datos.dni);
   assert.equal(otraInscripcion.convocatoriaId, convocatoriaSiguiente.id);
   assert.equal(repo.leer().inscripciones.length, ejemplos.length + 2);
+  const guardado = JSON.parse(almacen.getItem('mesa-abierta-v1'));
+  assert.equal(guardado.ciudadanos.filter(ciudadano => ciudadano.dni === datos.dni).length, 1);
+  assert.equal(guardado.postulaciones.filter(postulacion => postulacion.ciudadanoDni === datos.dni).length, 2);
   assert.throws(
     () => registrarSolicitud(datos, repo, fechaSiguiente, convocatoriaSiguiente),
     /para esta convocatoria/,
@@ -229,6 +238,10 @@ test('migra los registros guardados en el formato anterior', () => {
     solicitudes: [{
       id: 'MA-ANTERIOR',
       dni: '30555666',
+      nombre: 'María',
+      apellido: 'Anterior',
+      nacimiento: '1990-04-20',
+      correo: 'maria@example.com',
       convocatoriaId: 'conv-2026',
       intereses: [],
     }],
@@ -238,6 +251,7 @@ test('migra los registros guardados en el formato anterior', () => {
 
   const repo = crearRepositorio(almacen);
   assert.equal(repo.leer().inscripciones[0].id, 'MA-ANTERIOR');
+  assert.equal(repo.leer().inscripciones[0].nombre, 'María');
   assert.equal(Object.hasOwn(repo.leer(), 'solicitudes'), false);
   assert.ok(repo.leer().inscripciones.some(inscripcion => inscripcion.convocatoriaId === 'conv-2027'));
 });
