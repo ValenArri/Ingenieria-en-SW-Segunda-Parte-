@@ -162,7 +162,7 @@ export const datosEjemplo = {
       afiliacion: 'no',
       partido: '',
       intereses: ['c1', 'c3'],
-      estado: 'Aprobada',
+      estado: 'Pendiente de evaluación',
     },
     {
       id: 'DEMO-POST-2026-03',
@@ -176,8 +176,7 @@ export const datosEjemplo = {
       afiliacion: 'no',
       partido: '',
       intereses: [],
-      estado: 'Rechazada',
-      motivo: 'No se pudo validar la documentación presentada.',
+      estado: 'Pendiente de evaluación',
     },
     {
       id: 'DEMO-POST-2027-01',
@@ -205,8 +204,7 @@ export const datosEjemplo = {
       afiliacion: 'no',
       partido: '',
       intereses: [],
-      estado: 'Rechazada',
-      motivo: 'Falta documentación respaldatoria.',
+      estado: 'Pendiente de evaluación',
     },
     {
       id: 'DEMO-POST-2027-03',
@@ -220,7 +218,7 @@ export const datosEjemplo = {
       afiliacion: 'si',
       partido: 'Agrupación de ejemplo',
       intereses: ['c3'],
-      estado: 'Aprobada',
+      estado: 'Pendiente de evaluación',
     },
     {
       id: 'DEMO-POST-2028-01',
@@ -262,8 +260,7 @@ export const datosEjemplo = {
       afiliacion: 'no',
       partido: '',
       intereses: [],
-      estado: 'Rechazada',
-      motivo: 'La información de contacto requiere corrección.',
+      estado: 'Pendiente de evaluación',
     },
   ],
   inscripciones: [

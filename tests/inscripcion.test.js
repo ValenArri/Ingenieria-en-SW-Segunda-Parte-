@@ -61,6 +61,8 @@ test('hay tres ejemplos normalizados por convocatoria con postulaciones independ
   assert.equal(estado.ciudadanos.length, 7);
   assert.equal(estado.postulaciones.length, 9);
   assert.equal(new Set(estado.postulaciones.map(postulacion => postulacion.id)).size, 9);
+  assert.ok(estado.postulaciones.every(postulacion => postulacion.estado === 'Pendiente de evaluación'));
+  assert.ok(estado.postulaciones.every(postulacion => !Object.hasOwn(postulacion, 'motivo')));
   assert.deepEqual(
     Object.keys(datosEjemplo.inscripciones[0]).sort(),
     ['convocatoriaId', 'fechaRegistro', 'id', 'postulacionId'],
