@@ -19,7 +19,7 @@ Los nombres de casos de uso de esta tabla corresponden al **diagrama general de 
 | Inscripción, paso 2 | Registra experiencia, capacitación y afiliación, con partido obligatorio cuando corresponde. Permite indicar interés opcional en charlas. | «Registrarse como postulante»; RFE-04 y RFD-05. |
 | Inscripción, paso 3 | Permite revisar y volver a editar. Verifica plazo y que no exista otra inscripción del mismo DNI en la convocatoria actual antes de persistirla. | «Registrarse como postulante»; RFE-03 y restricción de registro de RFE-06. |
 | Mi solicitud | Confirma el guardado local y permite consultar los datos enviados y el número de comprobante, sin revelar el estado de evaluación. Conserva los datos al recargar. | Resultado de «Registrarse como postulante»; RNFE-02 en el alcance local de la demo. |
-| Explorar la demo | Cambia la convocatoria y el reloj de demostración; muestra solo las inscripciones vinculadas al período seleccionado. Permite verificar registros locales y reiniciar los datos. La revisión y resolución simuladas se habilitan únicamente al cierre de la convocatoria seleccionada. | Herramienta auxiliar de exposición; no equivale al módulo administrativo completo de «Consultar Informacion Postulante». |
+| Explorar la demo | Cambia la convocatoria y el reloj de demostración; muestra las tres inscripciones de ejemplo y las inscripciones locales del período. Los datos de ejemplo respetan las entidades Ciudadano, Postulación e Inscripción y conservan una postulación distinta por convocatoria, aun cuando corresponda al mismo ciudadano. Permite verificar y borrar los registros locales. La revisión y resolución simuladas se habilitan únicamente al cierre de la convocatoria seleccionada. | Herramienta auxiliar de exposición; no equivale al módulo administrativo completo de «Consultar Informacion Postulante». |
 
 ## Recorrido principal
 
@@ -36,7 +36,7 @@ La consulta de charlas también está disponible fuera del período de inscripci
 - **Cierre:** se adopta el final del día de la última charla como fecha límite. La validación ocurre tanto al abrir como al confirmar el formulario. No se implementan tareas en segundo plano ni reportes posteriores al cierre.
 - **DNI:** se asume una sola inscripción por DNI y convocatoria dentro del almacenamiento local. La persona puede volver a postularse en otro período. No se consulta un padrón ni se verifica identidad.
 - **Elegibilidad:** se requiere fecha de nacimiento válida y una edad mínima de 16 años al momento de postularse. No se exige experiencia, capacitación ni afiliación. El límite técnico inferior del selector es 1900.
-- **Datos:** fechas, actividades y postulante inicial son ficticios. Las sedes se utilizan como referencias reales, sin afirmar que haya actividades allí.
+- **Datos:** fechas, actividades y postulaciones de ejemplo son ficticias. Hay tres ejemplos por convocatoria para 2026, 2027 y 2028, almacenados por separado como ciudadanos, postulaciones e inscripciones. La demo también muestra los registros enviados en el navegador. Las sedes se utilizan como referencias reales, sin afirmar que haya actividades allí.
 
 ## Fuera de alcance de esta implementación
 

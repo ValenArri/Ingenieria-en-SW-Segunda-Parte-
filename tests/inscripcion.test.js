@@ -9,7 +9,7 @@ import {
   registrarSolicitud,
   resolverSolicitud,
 } from '../src/servicios.js';
-import { convocatoria, convocatorias, distritos, ejemplos } from '../src/datos.js';
+import { convocatoria, convocatorias, datosEjemplo, distritos } from '../src/datos.js';
 
 // Datos válidos reutilizados por los casos de inscripción.
 const datos = {
@@ -45,14 +45,103 @@ test('la convocatoria respeta los límites exactos en hora argentina', () => {
   assert.equal(estadoConvocatoria(new Date('2026-10-31T00:00:00-03:00')), 'Convocatoria cerrada');
 });
 
-test('hay tres inscripciones de ejemplo para cada convocatoria', () => {
+test('hay tres ejemplos normalizados por convocatoria con postulaciones independientes', () => {
+  const almacen = crearAlmacenamiento();
+  const repo = crearRepositorio(almacen);
+  const estado = repo.leer();
+  assert.equal(estado.inscripciones.length, 9);
+
   for (const periodo of convocatorias) {
     assert.equal(
-      ejemplos.filter(inscripcion => inscripcion.convocatoriaId === periodo.id).length,
+      estado.inscripciones.filter(inscripcion => inscripcion.convocatoriaId === periodo.id).length,
       3,
-      `Se esperaban tres inscripciones de ejemplo para ${periodo.nombre}.`,
     );
   }
+
+  assert.equal(estado.ciudadanos.length, 7);
+  assert.equal(estado.postulaciones.length, 9);
+  assert.equal(new Set(estado.postulaciones.map(postulacion => postulacion.id)).size, 9);
+  assert.deepEqual(
+    Object.keys(datosEjemplo.inscripciones[0]).sort(),
+    ['convocatoriaId', 'fechaRegistro', 'id', 'postulacionId'],
+  );
+  assert.ok(estado.inscripciones.every(inscripcion =>
+    estado.postulaciones.some(postulacion => postulacion.id === inscripcion.id),
+  ));
+  assert.ok(datosEjemplo.inscripciones.every(inscripcion =>
+    datosEjemplo.postulaciones.some(postulacion => postulacion.id === inscripcion.postulacionId),
+  ));
+  assert.ok(estado.postulaciones.every(postulacion =>
+    estado.inscripciones.filter(inscripcion => inscripcion.postulacionId === postulacion.id).length === 1,
+  ));
+
+  const postulacionesAlex = estado.inscripciones.filter(inscripcion => inscripcion.dni === '12345678');
+  assert.equal(postulacionesAlex.length, 3);
+  assert.equal(new Set(postulacionesAlex.map(inscripcion => inscripcion.id)).size, 3);
+  repo.guardar({ ...estado, escenario: 'cerrada' });
+  resolverSolicitud('DEMO-POST-2028-01', 'Rechazada', 'Motivo de prueba.', repo, convocatorias[2]);
+  const alexPorPeriodo = repo.leer().inscripciones.filter(inscripcion => inscripcion.dni === '12345678');
+  assert.equal(alexPorPeriodo.find(inscripcion => inscripcion.convocatoriaId === 'conv-2028').estado, 'Rechazada');
+  assert.equal(alexPorPeriodo.find(inscripcion => inscripcion.convocatoriaId === 'conv-2026').estado, 'Pendiente de evaluación');
+  assert.equal(alexPorPeriodo.find(inscripcion => inscripcion.convocatoriaId === 'conv-2027').estado, 'Pendiente de evaluación');
+  const recargado = crearRepositorio(almacen).leer();
+  assert.equal(recargado.inscripciones.length, 9);
+  assert.equal(recargado.inscripciones.find(inscripcion => inscripcion.id === 'DEMO-POST-2028-01').estado, 'Rechazada');
+});
+
+test('elimina los datos de prueba antiguos sin borrar postulaciones reales', () => {
+  const almacen = crearAlmacenamiento();
+  almacen.setItem('mesa-abierta-v1', JSON.stringify({
+    ciudadanos: [
+      { dni: '12345678', nombre: 'Alex', apellido: 'Ejemplo', nacimiento: '1995-05-20' },
+      { dni: datos.dni, nombre: datos.nombre, apellido: datos.apellido, nacimiento: datos.nacimiento },
+    ],
+    postulaciones: [
+      { id: 'MA-EJEMPLO-01', ciudadanoDni: '12345678', intereses: [], ejemplo: true, estado: 'Pendiente de evaluación' },
+      { id: 'MA-REAL-01', ciudadanoDni: datos.dni, intereses: [], estado: 'Pendiente de evaluación' },
+    ],
+    inscripciones: [
+      { id: 'INS-MA-EJEMPLO-01', postulacionId: 'MA-EJEMPLO-01', convocatoriaId: 'conv-2026', fechaRegistro: '2026-10-05T15:00:00Z' },
+      { id: 'INS-MA-REAL-01', postulacionId: 'MA-REAL-01', convocatoriaId: 'conv-2026', fechaRegistro: '2026-10-06T15:00:00Z' },
+    ],
+    ultimaId: 'MA-EJEMPLO-01',
+    escenario: 'abierta',
+    convocatoriaId: 'conv-2026',
+  }));
+  const repoLimpio = crearRepositorio(almacen);
+  assert.equal(repoLimpio.leer().inscripciones.length, 10);
+  assert.ok(repoLimpio.leer().inscripciones.some(inscripcion => inscripcion.id === 'MA-REAL-01'));
+  assert.ok(!repoLimpio.leer().inscripciones.some(inscripcion => inscripcion.id.startsWith('MA-EJEMPLO-')));
+  assert.equal(repoLimpio.leer().ultimaId, null);
+  assert.match(repoLimpio.advertencia(), /Se eliminaron los datos de prueba/);
+  const guardado = JSON.parse(almacen.getItem('mesa-abierta-v1'));
+  assert.ok(guardado.postulaciones.some(postulacion => postulacion.id === 'MA-REAL-01'));
+});
+
+test('reemplaza la estructura heredada con los ejemplos del modelo actual', () => {
+  const almacen = crearAlmacenamiento();
+  almacen.setItem('mesa-abierta-v1', JSON.stringify({
+    ciudadanos: [{}],
+    postulaciones: [{
+      id: 'INS-MA-EJEMPLO-01',
+      postulacionId: 'MA-EJEMPLO-01',
+      fechaRegistro: '2026-10-05T15:00:00Z',
+    }],
+    inscripciones: [{
+      id: 'INS-INS-MA-EJEMPLO-01',
+      postulacionId: 'MA-EJEMPLO-01',
+      convocatoriaId: 'conv-2026',
+    }],
+    escenario: 'abierta',
+    convocatoriaId: 'conv-2026',
+  }));
+
+  const repo = crearRepositorio(almacen);
+  assert.equal(repo.leer().inscripciones.length, 9);
+  assert.match(repo.advertencia(), /Se eliminaron los datos de prueba/);
+  assert.ok(JSON.parse(almacen.getItem('mesa-abierta-v1')).inscripciones.every(
+    inscripcion => inscripcion.id.startsWith('DEMO-INS-'),
+  ));
 });
 
 test('se puede registrar sin experiencia, capacitación ni interés en charlas', () => {
@@ -64,7 +153,7 @@ test('se puede registrar sin experiencia, capacitación ni interés en charlas',
 
   assert.equal(solicitud.estado, 'Pendiente de evaluación');
   assert.equal(crearRepositorio(almacen).leer().ultimaId, solicitud.id);
-  assert.equal(repo.leer().inscripciones.length, ejemplos.length + 1);
+  assert.equal(repo.leer().inscripciones.length, 10);
   const guardado = JSON.parse(almacen.getItem('mesa-abierta-v1'));
   const postulacionGuardada = guardado.postulaciones.find(postulacion => postulacion.id === solicitud.id);
   const inscripcionGuardada = guardado.inscripciones.find(inscripcion => inscripcion.postulacionId === solicitud.id);
@@ -96,7 +185,7 @@ test('permite al mismo DNI inscribirse en convocatorias distintas, una vez por c
 
   assert.equal(otraInscripcion.dni, datos.dni);
   assert.equal(otraInscripcion.convocatoriaId, convocatoriaSiguiente.id);
-  assert.equal(repo.leer().inscripciones.length, ejemplos.length + 2);
+  assert.equal(repo.leer().inscripciones.length, 11);
   const guardado = JSON.parse(almacen.getItem('mesa-abierta-v1'));
   assert.equal(guardado.ciudadanos.filter(ciudadano => ciudadano.dni === datos.dni).length, 1);
   assert.equal(guardado.postulaciones.filter(postulacion => postulacion.ciudadanoDni === datos.dni).length, 2);
@@ -104,48 +193,69 @@ test('permite al mismo DNI inscribirse en convocatorias distintas, una vez por c
     () => registrarSolicitud(datos, repo, fechaSiguiente, convocatoriaSiguiente),
     /para esta convocatoria/,
   );
+
+  repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
+  resolverSolicitud(otraInscripcion.id, 'Rechazada', 'Motivo de prueba.', repo, convocatoriaSiguiente);
+  assert.equal(
+    repo.leer().inscripciones.find(inscripcion => inscripcion.id === otraInscripcion.id).estado,
+    'Rechazada',
+  );
+  assert.equal(
+    repo.leer().inscripciones.find(inscripcion => inscripcion.id !== otraInscripcion.id).estado,
+    'Pendiente de evaluación',
+  );
 });
 
 test('al rechazar guarda el motivo y al aprobar no lo agrega', () => {
   const repo = crearRepositorio(crearAlmacenamiento());
+  const solicitud = registrarSolicitud(datos, repo, fechaActual('abierta'));
   repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
 
-  const rechazada = resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', '  Datos incompletos.  ', repo);
+  const rechazada = resolverSolicitud(solicitud.id, 'Rechazada', '  Datos incompletos.  ', repo);
   assert.equal(rechazada.estado, 'Rechazada');
   assert.equal(rechazada.motivo, 'Datos incompletos.');
 
-  repo.reiniciar();
+  repo.borrarDatos();
+  const nuevaSolicitud = registrarSolicitud(datos, repo, fechaActual('abierta'));
   repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
-  const aprobada = resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo);
+  const aprobada = resolverSolicitud(nuevaSolicitud.id, 'Aprobada', '', repo);
   assert.equal(aprobada.estado, 'Aprobada');
   assert.equal(Object.hasOwn(aprobada, 'motivo'), false);
 });
 
 test('no permite rechazar sin un motivo ni resolver una postulación dos veces', () => {
   const repo = crearRepositorio(crearAlmacenamiento());
+  const solicitud = registrarSolicitud(datos, repo, fechaActual('abierta'));
   repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
 
   assert.throws(
-    () => resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', '  ', repo),
+    () => resolverSolicitud(solicitud.id, 'Rechazada', '  ', repo),
     /Ingresá el motivo/,
   );
-  assert.equal(repo.leer().inscripciones[0].estado, 'Pendiente de evaluación');
+  assert.equal(
+    repo.leer().inscripciones.find(inscripcion => inscripcion.id === solicitud.id).estado,
+    'Pendiente de evaluación',
+  );
 
-  resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo);
+  resolverSolicitud(solicitud.id, 'Aprobada', '', repo);
   assert.throws(
-    () => resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', 'Motivo', repo),
+    () => resolverSolicitud(solicitud.id, 'Rechazada', 'Motivo', repo),
     /ya no está pendiente/,
   );
 });
 
 test('no permite revisar postulaciones mientras la convocatoria siga abierta', () => {
   const repo = crearRepositorio(crearAlmacenamiento());
+  const solicitud = registrarSolicitud(datos, repo, fechaActual('abierta'));
 
   assert.throws(
-    () => resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo),
+    () => resolverSolicitud(solicitud.id, 'Aprobada', '', repo),
     /cuando la convocatoria está cerrada/,
   );
-  assert.equal(repo.leer().inscripciones[0].estado, 'Pendiente de evaluación');
+  assert.equal(
+    repo.leer().inscripciones.find(inscripcion => inscripcion.id === solicitud.id).estado,
+    'Pendiente de evaluación',
+  );
 });
 
 test('los escenarios de fecha se ajustan al período seleccionado', () => {
@@ -160,13 +270,15 @@ test('los escenarios de fecha se ajustan al período seleccionado', () => {
 
 test('la revisión usa el cierre del período seleccionado y no el de otra convocatoria', () => {
   const repo = crearRepositorio(crearAlmacenamiento());
+  const solicitud2026 = registrarSolicitud(datos, repo, fechaActual('abierta'));
+  const fecha2027 = new Date('2027-10-06T12:00:00-03:00');
+  const solicitud2027 = registrarSolicitud(datos, repo, fecha2027, convocatorias[1]);
   repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
-  const convocatoria2027 = convocatorias.find(periodo => periodo.id === 'conv-2027');
 
-  const resuelta = resolverSolicitud('MA-EJEMPLO-02', 'Aprobada', '', repo, convocatoria2027);
-  assert.equal(resuelta.convocatoriaId, convocatoria2027.id);
+  const resuelta = resolverSolicitud(solicitud2027.id, 'Aprobada', '', repo, convocatorias[1]);
+  assert.equal(resuelta.convocatoriaId, convocatorias[1].id);
   assert.equal(resuelta.estado, 'Aprobada');
-  assert.equal(repo.leer().inscripciones.find(inscripcion => inscripcion.id === 'MA-EJEMPLO-01').estado, 'Pendiente de evaluación');
+  assert.equal(repo.leer().inscripciones.find(inscripcion => inscripcion.id === solicitud2026.id).estado, 'Pendiente de evaluación');
 });
 
 test('bloquea registros futuros o cerrados incluso con datos válidos', () => {
@@ -226,11 +338,11 @@ test('un fallo de almacenamiento no confirma falsamente una inscripción', () =>
   const repo = crearRepositorio({ getItem: () => null, setItem: () => { throw new Error('QuotaExceededError'); } });
 
   assert.throws(() => registrarSolicitud(datos, repo, fechaActual('abierta')), /No pudimos guardar/);
-  assert.equal(repo.leer().inscripciones.length, ejemplos.length);
+  assert.equal(repo.leer().inscripciones.length, 0);
   assert.equal(repo.leer().ultimaId, null);
 });
 
-test('recupera almacenamiento corrupto y permite restablecer ejemplos', () => {
+test('recupera almacenamiento corrupto y permite borrar las inscripciones locales', () => {
   const almacen = crearAlmacenamiento();
   almacen.setItem('mesa-abierta-v1', '{roto');
 
@@ -238,9 +350,10 @@ test('recupera almacenamiento corrupto y permite restablecer ejemplos', () => {
   assert.match(repo.advertencia(), /No se pudieron recuperar/);
   registrarSolicitud(datos, repo, fechaActual('abierta'));
 
-  repo.reiniciar();
-  assert.equal(repo.leer().inscripciones.length, ejemplos.length);
+  repo.borrarDatos();
+  assert.equal(repo.leer().inscripciones.length, 0);
   assert.equal(repo.leer().ultimaId, null);
+  assert.equal(crearRepositorio(almacen).leer().inscripciones.length, 0);
 });
 
 test('migra los registros guardados en el formato anterior', () => {
@@ -264,5 +377,6 @@ test('migra los registros guardados en el formato anterior', () => {
   assert.equal(repo.leer().inscripciones[0].id, 'MA-ANTERIOR');
   assert.equal(repo.leer().inscripciones[0].nombre, 'María');
   assert.equal(Object.hasOwn(repo.leer(), 'solicitudes'), false);
-  assert.ok(repo.leer().inscripciones.some(inscripcion => inscripcion.convocatoriaId === 'conv-2027'));
+  assert.equal(repo.leer().inscripciones.length, 10);
+  assert.ok(repo.leer().inscripciones.some(inscripcion => inscripcion.id === 'MA-ANTERIOR'));
 });

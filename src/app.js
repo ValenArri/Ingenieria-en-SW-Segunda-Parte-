@@ -170,11 +170,11 @@ function demo() {
         <a class="boton oscuro" href="#inscripcion">Probar inscripción</a>
       </section>
       <section class="panel">
-        <h2>Datos de ejemplo</h2>
-        <button id="reiniciar" class="boton borde">Restablecer datos de ejemplo</button>
+        <h2>Inscripciones locales</h2>
+        <button id="reiniciar" class="boton borde">Borrar inscripciones guardadas</button>
         <div id="confirmar-reinicio" hidden class="aviso">
-          <p>¿Borrar las postulaciones locales y volver al estado inicial?</p>
-          <button id="confirmar-borrado" class="boton oscuro pequeno">Sí, restablecer</button>
+          <p>¿Borrar todas las inscripciones guardadas en este navegador? Esta acción no se puede deshacer.</p>
+          <button id="confirmar-borrado" class="boton oscuro pequeno">Sí, borrar</button>
           <button id="cancelar-borrado" class="boton borde pequeno">Cancelar</button>
         </div>
       </section>
@@ -388,8 +388,7 @@ function renderizar(enfocar = true) {
   document.querySelector('#reiniciar')?.addEventListener('click', () => { document.querySelector('#confirmar-reinicio').hidden = false; document.querySelector('#cancelar-borrado').focus(); });
   document.querySelector('#cancelar-borrado')?.addEventListener('click', () => { document.querySelector('#confirmar-reinicio').hidden = true; document.querySelector('#reiniciar').focus(); });
   document.querySelector('#confirmar-borrado')?.addEventListener('click', () => {
-    // El reinicio vuelve a ejemplos y limpia el estado temporal del formulario.
-    try { repositorio.reiniciar(); borrador = { intereses: [] }; paso = 1; renderizar(false); avisar('Datos de ejemplo restablecidos.'); }
+    try { repositorio.borrarDatos(); borrador = { intereses: [] }; paso = 1; renderizar(false); avisar('Se borraron las inscripciones guardadas en este navegador.'); }
     catch (error) { avisar(error.message); }
   });
   if (enfocar) { contenido.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); }
