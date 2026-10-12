@@ -170,10 +170,10 @@ function demo() {
       </section>
       <section class="panel">
         <h2>Inscripciones locales</h2>
-        <button id="reiniciar" class="boton borde">Borrar inscripciones guardadas</button>
+        <button id="reiniciar" class="boton borde">Restablecer datos</button>
         <div id="confirmar-reinicio" hidden class="aviso">
-          <p>¿Borrar todas las inscripciones guardadas en este navegador? Esta acción no se puede deshacer.</p>
-          <button id="confirmar-borrado" class="boton oscuro pequeno">Sí, borrar</button>
+          <p>¿Restablecer los datos de fábrica? Se reemplazarán las inscripciones locales por los datos de ejemplo.</p>
+          <button id="confirmar-borrado" class="boton oscuro pequeno">Sí, restablecer</button>
           <button id="cancelar-borrado" class="boton borde pequeno">Cancelar</button>
         </div>
       </section>
@@ -387,7 +387,7 @@ function renderizar(enfocar = true) {
   document.querySelector('#reiniciar')?.addEventListener('click', () => { document.querySelector('#confirmar-reinicio').hidden = false; document.querySelector('#cancelar-borrado').focus(); });
   document.querySelector('#cancelar-borrado')?.addEventListener('click', () => { document.querySelector('#confirmar-reinicio').hidden = true; document.querySelector('#reiniciar').focus(); });
   document.querySelector('#confirmar-borrado')?.addEventListener('click', () => {
-    try { repositorio.borrarDatos(); borrador = { intereses: [] }; paso = 1; renderizar(false); avisar('Se borraron las inscripciones guardadas en este navegador.'); }
+    try { repositorio.restablecerDatos(); borrador = { intereses: [] }; paso = 1; renderizar(false); avisar('Se restablecieron los datos de fábrica.'); }
     catch (error) { avisar(error.message); }
   });
   if (enfocar) { contenido.focus({ preventScroll: true }); window.scrollTo({ top: 0, behavior: 'instant' }); }

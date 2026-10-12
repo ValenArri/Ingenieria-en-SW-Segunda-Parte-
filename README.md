@@ -51,7 +51,7 @@ En GitHub Pages solo se sirven archivos estáticos: **no se ejecuta el servidor 
 5. Dejá las charlas sin seleccionar para demostrar que son opcionales. Revisá y enviá.
 6. Descargá el comprobante y recargá la página: la solicitud sigue guardada.
 7. En **Explorar la demo**, seleccioná otra convocatoria para consultar sus tres ejemplos independientes. Elegí el escenario **Cerrada** para habilitar la revisión del período; aceptá o rechazá una postulación ingresando el motivo. El estado de Alex en un año no cambia sus postulaciones de los otros períodos.
-8. Probá que la inscripción ya no se puede enviar y, si querés, borrá las inscripciones antes de repetir la presentación.
+8. Probá que la inscripción ya no se puede enviar y usá **Restablecer datos** para volver al conjunto de fábrica antes de repetir la presentación.
 
 ## Fechas y persistencia
 
@@ -61,7 +61,7 @@ Por defecto la aplicación simula el **6/10/2026** para que la presentación sig
 
 Los datos se guardan bajo la clave `mesa-abierta-v1` de **localStorage**. Persisten al recargar en el mismo origen y navegador. No se comparten con otros visitantes, dispositivos o navegadores; borrar los datos del sitio borra las inscripciones. Una persona puede inscribirse en distintas convocatorias con el mismo DNI, pero solo una vez por convocatoria. El comprobante corresponde a la última inscripción creada en ese navegador. La vista de demo permite comprobar todos los registros locales.
 
-No se guardan borradores incompletos al recargar. Si el navegador bloquea o agota el almacenamiento, el envío informa el error y no muestra una confirmación falsa. Si los datos guardados están dañados, la app avisa y comienza con datos de ejemplo. Las muestras antiguas se sustituyen por nueve registros normalizados; las inscripciones reales se conservan. La acción **Borrar inscripciones guardadas** elimina los registros y ejemplos de este navegador.
+No se guardan borradores incompletos al recargar. Si el navegador bloquea o agota el almacenamiento, el envío informa el error y no muestra una confirmación falsa. Si los datos guardados están dañados, la app avisa y comienza con datos de ejemplo. Las muestras antiguas se sustituyen por nueve registros normalizados; las inscripciones reales se conservan. La acción **Restablecer datos** reemplaza las inscripciones locales por los nueve datos de fábrica.
 
 ## Alcance y límites
 

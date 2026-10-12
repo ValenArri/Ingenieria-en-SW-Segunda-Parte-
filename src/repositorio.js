@@ -249,13 +249,11 @@ export function crearRepositorio(almacenamiento) {
 
       memoria = structuredClone(normalizados);
     },
-    borrarDatos() {
+    restablecerDatos() {
+      const datosIniciales = estadoInicial();
       this.guardar({
-        ...sinDatosEjemplo(),
-        ultimaId: null,
-        escenario: 'abierta',
-        convocatoriaId: convocatoria.id,
-        ejemplosDesactivados: true,
+        ...datosIniciales,
+        inscripciones: proyectarInscripciones(datosIniciales),
       });
     },
   };

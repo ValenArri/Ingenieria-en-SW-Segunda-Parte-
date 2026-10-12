@@ -84,6 +84,15 @@ test('hay tres ejemplos normalizados por convocatoria con postulaciones independ
   assert.equal(alexPorPeriodo.find(inscripcion => inscripcion.convocatoriaId === 'conv-2028').estado, 'Rechazada');
   assert.equal(alexPorPeriodo.find(inscripcion => inscripcion.convocatoriaId === 'conv-2026').estado, 'Pendiente de evaluación');
   assert.equal(alexPorPeriodo.find(inscripcion => inscripcion.convocatoriaId === 'conv-2027').estado, 'Pendiente de evaluación');
+
+  repo.restablecerDatos();
+  const restablecido = crearRepositorio(almacen).leer();
+  assert.equal(restablecido.inscripciones.length, 9);
+  assert.equal(restablecido.ciudadanos.length, 7);
+  assert.equal(restablecido.postulaciones.length, 9);
+  assert.ok(restablecido.inscripciones.every(inscripcion => inscripcion.inscripcionId.startsWith('DEMO-INS-')));
+  assert.equal(restablecido.inscripciones.find(inscripcion => inscripcion.id === 'DEMO-POST-2028-01').estado, 'Pendiente de evaluación');
+  assert.equal(Object.hasOwn(restablecido, 'ejemplosDesactivados'), false);
   const recargado = crearRepositorio(almacen).leer();
   assert.equal(recargado.inscripciones.length, 9);
   assert.equal(recargado.inscripciones.find(inscripcion => inscripcion.id === 'DEMO-POST-2028-01').estado, 'Rechazada');
@@ -215,7 +224,7 @@ test('al rechazar guarda el motivo y al aprobar no lo agrega', () => {
   assert.equal(rechazada.estado, 'Rechazada');
   assert.equal(rechazada.motivo, 'Datos incompletos.');
 
-  repo.borrarDatos();
+  repo.restablecerDatos();
   const nuevaSolicitud = registrarSolicitud(datos, repo, fechaActual('abierta'));
   repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
   const aprobada = resolverSolicitud(nuevaSolicitud.id, 'Aprobada', '', repo);
@@ -342,7 +351,7 @@ test('un fallo de almacenamiento no confirma falsamente una inscripción', () =>
   assert.equal(repo.leer().ultimaId, null);
 });
 
-test('recupera almacenamiento corrupto y permite borrar las inscripciones locales', () => {
+test('recupera almacenamiento corrupto y restablece los datos de fábrica', () => {
   const almacen = crearAlmacenamiento();
   almacen.setItem('mesa-abierta-v1', '{roto');
 
@@ -350,10 +359,10 @@ test('recupera almacenamiento corrupto y permite borrar las inscripciones locale
   assert.match(repo.advertencia(), /No se pudieron recuperar/);
   registrarSolicitud(datos, repo, fechaActual('abierta'));
 
-  repo.borrarDatos();
-  assert.equal(repo.leer().inscripciones.length, 0);
+  repo.restablecerDatos();
+  assert.equal(repo.leer().inscripciones.length, 9);
   assert.equal(repo.leer().ultimaId, null);
-  assert.equal(crearRepositorio(almacen).leer().inscripciones.length, 0);
+  assert.equal(crearRepositorio(almacen).leer().inscripciones.length, 9);
 });
 
 test('migra los registros guardados en el formato anterior', () => {
