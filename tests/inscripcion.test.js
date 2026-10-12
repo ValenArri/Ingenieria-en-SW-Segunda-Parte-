@@ -9,7 +9,7 @@ import {
   registrarSolicitud,
   resolverSolicitud,
 } from '../src/servicios.js';
-import { distritos } from '../src/datos.js';
+import { convocatoria, convocatorias, distritos, ejemplos } from '../src/datos.js';
 
 // Datos válidos reutilizados por los casos de inscripción.
 const datos = {
@@ -53,7 +53,7 @@ test('se puede registrar sin experiencia, capacitación ni interés en charlas',
 
   assert.equal(solicitud.estado, 'Pendiente de evaluación');
   assert.equal(crearRepositorio(almacen).leer().ultimaId, solicitud.id);
-  assert.equal(repo.leer().solicitudes.length, 2);
+  assert.equal(repo.leer().inscripciones.length, ejemplos.length + 1);
 });
 
 test('normaliza DNI y correo e impide duplicar una inscripción', () => {
@@ -61,18 +61,41 @@ test('normaliza DNI y correo e impide duplicar una inscripción', () => {
 
   registrarSolicitud({ ...datos, dni: '30.555.666', correo: ' MARIA@EXAMPLE.COM ' }, repo, fechaActual('abierta'));
 
-  assert.equal(repo.leer().solicitudes[1].correo, 'maria@example.com');
+  assert.equal(repo.leer().inscripciones.find(inscripcion => inscripcion.correo === 'maria@example.com').correo, 'maria@example.com');
   assert.throws(() => registrarSolicitud(datos, repo, fechaActual('abierta')), /Ya existe/);
+});
+
+test('permite al mismo DNI inscribirse en convocatorias distintas, una vez por cada una', () => {
+  const repo = crearRepositorio(crearAlmacenamiento());
+  const convocatoriaSiguiente = {
+    id: 'conv-2027',
+    inicio: '2027-10-01T00:00:00-03:00',
+    fin: '2027-10-30T23:59:59.999-03:00',
+  };
+  const fechaSiguiente = new Date('2027-10-06T12:00:00-03:00');
+
+  registrarSolicitud(datos, repo, fechaActual('abierta'));
+  const otraInscripcion = registrarSolicitud(datos, repo, fechaSiguiente, convocatoriaSiguiente);
+
+  assert.equal(otraInscripcion.dni, datos.dni);
+  assert.equal(otraInscripcion.convocatoriaId, convocatoriaSiguiente.id);
+  assert.equal(repo.leer().inscripciones.length, ejemplos.length + 2);
+  assert.throws(
+    () => registrarSolicitud(datos, repo, fechaSiguiente, convocatoriaSiguiente),
+    /para esta convocatoria/,
+  );
 });
 
 test('al rechazar guarda el motivo y al aprobar no lo agrega', () => {
   const repo = crearRepositorio(crearAlmacenamiento());
+  repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
 
   const rechazada = resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', '  Datos incompletos.  ', repo);
   assert.equal(rechazada.estado, 'Rechazada');
   assert.equal(rechazada.motivo, 'Datos incompletos.');
 
   repo.reiniciar();
+  repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
   const aprobada = resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo);
   assert.equal(aprobada.estado, 'Aprobada');
   assert.equal(Object.hasOwn(aprobada, 'motivo'), false);
@@ -80,18 +103,50 @@ test('al rechazar guarda el motivo y al aprobar no lo agrega', () => {
 
 test('no permite rechazar sin un motivo ni resolver una postulación dos veces', () => {
   const repo = crearRepositorio(crearAlmacenamiento());
+  repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
 
   assert.throws(
     () => resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', '  ', repo),
     /Ingresá el motivo/,
   );
-  assert.equal(repo.leer().solicitudes[0].estado, 'Pendiente de evaluación');
+  assert.equal(repo.leer().inscripciones[0].estado, 'Pendiente de evaluación');
 
   resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo);
   assert.throws(
     () => resolverSolicitud('MA-EJEMPLO-01', 'Rechazada', 'Motivo', repo),
     /ya no está pendiente/,
   );
+});
+
+test('no permite revisar postulaciones mientras la convocatoria siga abierta', () => {
+  const repo = crearRepositorio(crearAlmacenamiento());
+
+  assert.throws(
+    () => resolverSolicitud('MA-EJEMPLO-01', 'Aprobada', '', repo),
+    /cuando la convocatoria está cerrada/,
+  );
+  assert.equal(repo.leer().inscripciones[0].estado, 'Pendiente de evaluación');
+});
+
+test('los escenarios de fecha se ajustan al período seleccionado', () => {
+  const convocatoria2027 = convocatorias.find(periodo => periodo.id === 'conv-2027');
+  const convocatoria2028 = convocatorias.find(periodo => periodo.id === 'conv-2028');
+
+  assert.equal(estadoConvocatoria(fechaActual('abierta', convocatoria2027), convocatoria2027), 'Inscripción abierta');
+  assert.equal(estadoConvocatoria(fechaActual('cerrada', convocatoria2027), convocatoria2027), 'Convocatoria cerrada');
+  assert.equal(estadoConvocatoria(fechaActual('futura', convocatoria2028), convocatoria2028), 'Próximamente');
+  assert.equal(estadoConvocatoria(fechaActual('abierta', convocatoria), convocatoria), 'Inscripción abierta');
+});
+
+test('la revisión usa el cierre del período seleccionado y no el de otra convocatoria', () => {
+  const repo = crearRepositorio(crearAlmacenamiento());
+  repo.guardar({ ...repo.leer(), escenario: 'cerrada' });
+  const convocatoria2027 = convocatorias.find(periodo => periodo.id === 'conv-2027');
+
+  const resuelta = resolverSolicitud('MA-EJEMPLO-02', 'Aprobada', '', repo, convocatoria2027);
+  assert.equal(resuelta.convocatoriaId, convocatoria2027.id);
+  assert.equal(resuelta.estado, 'Aprobada');
+  assert.equal(repo.leer().inscripciones.find(inscripcion => inscripcion.id === 'MA-EJEMPLO-01').estado, 'Pendiente de evaluación');
 });
 
 test('bloquea registros futuros o cerrados incluso con datos válidos', () => {
@@ -151,7 +206,7 @@ test('un fallo de almacenamiento no confirma falsamente una inscripción', () =>
   const repo = crearRepositorio({ getItem: () => null, setItem: () => { throw new Error('QuotaExceededError'); } });
 
   assert.throws(() => registrarSolicitud(datos, repo, fechaActual('abierta')), /No pudimos guardar/);
-  assert.equal(repo.leer().solicitudes.length, 1);
+  assert.equal(repo.leer().inscripciones.length, ejemplos.length);
   assert.equal(repo.leer().ultimaId, null);
 });
 
@@ -164,6 +219,25 @@ test('recupera almacenamiento corrupto y permite restablecer ejemplos', () => {
   registrarSolicitud(datos, repo, fechaActual('abierta'));
 
   repo.reiniciar();
-  assert.equal(repo.leer().solicitudes.length, 1);
+  assert.equal(repo.leer().inscripciones.length, ejemplos.length);
   assert.equal(repo.leer().ultimaId, null);
+});
+
+test('migra los registros guardados en el formato anterior', () => {
+  const almacen = crearAlmacenamiento();
+  almacen.setItem('mesa-abierta-v1', JSON.stringify({
+    solicitudes: [{
+      id: 'MA-ANTERIOR',
+      dni: '30555666',
+      convocatoriaId: 'conv-2026',
+      intereses: [],
+    }],
+    ultimaId: 'MA-ANTERIOR',
+    escenario: 'abierta',
+  }));
+
+  const repo = crearRepositorio(almacen);
+  assert.equal(repo.leer().inscripciones[0].id, 'MA-ANTERIOR');
+  assert.equal(Object.hasOwn(repo.leer(), 'solicitudes'), false);
+  assert.ok(repo.leer().inscripciones.some(inscripcion => inscripcion.convocatoriaId === 'conv-2027'));
 });

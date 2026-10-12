@@ -1,4 +1,4 @@
-import { ejemplos } from './datos.js';
+import { convocatoria, convocatorias, ejemplos } from './datos.js';
 
 // La clave identifica la versión del formato guardado en localStorage.
 const clave = 'mesa-abierta-v1';
@@ -6,9 +6,10 @@ const clave = 'mesa-abierta-v1';
 function estadoInicial() {
   // Clona los ejemplos para no compartir objetos mutables entre lecturas.
   return {
-    solicitudes: structuredClone(ejemplos),
+    inscripciones: structuredClone(ejemplos),
     ultimaId: null,
     escenario: 'abierta',
+    convocatoriaId: convocatoria.id,
   };
 }
 
@@ -25,18 +26,31 @@ export function crearRepositorio(almacenamiento) {
     if (guardado) {
       const datos = JSON.parse(guardado);
       const escenarioValido = ['abierta', 'cerrada', 'futura', 'real'].includes(datos.escenario);
-      const solicitudesValidas =
-        Array.isArray(datos.solicitudes) &&
-        datos.solicitudes.every(
-          solicitud =>
-            solicitud &&
-            typeof solicitud.dni === 'string' &&
-            typeof solicitud.id === 'string' &&
-            Array.isArray(solicitud.intereses),
+      const convocatoriaId = datos.convocatoriaId || convocatoria.id;
+      const convocatoriaValida = convocatorias.some(periodo => periodo.id === convocatoriaId);
+      const inscripcionesGuardadas = datos.inscripciones || datos.solicitudes;
+      const inscripcionesValidas =
+        Array.isArray(inscripcionesGuardadas) &&
+        inscripcionesGuardadas.every(
+          inscripcion =>
+            inscripcion &&
+            typeof inscripcion.dni === 'string' &&
+            typeof inscripcion.id === 'string' &&
+            typeof inscripcion.convocatoriaId === 'string' &&
+            Array.isArray(inscripcion.intereses),
         );
 
-      if (!solicitudesValidas || !escenarioValido) throw new Error();
-      memoria = datos;
+      if (!inscripcionesValidas || !escenarioValido || !convocatoriaValida) throw new Error();
+      const { solicitudes, ...datosActualizados } = datos;
+      const idsGuardados = new Set(inscripcionesGuardadas.map(inscripcion => inscripcion.id));
+      memoria = {
+        ...datosActualizados,
+        inscripciones: [
+          ...inscripcionesGuardadas,
+          ...ejemplos.filter(inscripcion => !idsGuardados.has(inscripcion.id)),
+        ],
+        convocatoriaId,
+      };
     }
   } catch {
     advertencia = 'No se pudieron recuperar los datos locales. La demo usa datos de ejemplo.';

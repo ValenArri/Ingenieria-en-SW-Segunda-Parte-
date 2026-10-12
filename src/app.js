@@ -1,4 +1,4 @@
-import { charlas, sedes, distritos, convocatoria } from './datos.js';
+import { charlas, sedes, distritos, convocatoria, convocatorias } from './datos.js';
 import { crearRepositorio } from './repositorio.js';
 import { fechaActual, estadoConvocatoria, normalizar, validar, registrarSolicitud, resolverSolicitud as resolverSolicitudDominio } from './servicios.js';
 
@@ -19,7 +19,17 @@ const escapar = texto =>
   String(texto ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
   );
-const fecha = () => /* Pide al servicio la fecha del escenario actual. */ fechaActual(repositorio.leer().escenario);
+const periodoActual = () =>
+  convocatorias.find(periodo => periodo.id === repositorio.leer().convocatoriaId) || convocatoria;
+const fecha = () => /* Pide al servicio la fecha del escenario actual. */ fechaActual(repositorio.leer().escenario, periodoActual());
+const rangoConvocatoria = periodo => {
+  const fechaCorta = valor => new Date(valor).toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'America/Argentina/Buenos_Aires',
+  });
+  return `${fechaCorta(periodo.inicio)} al ${fechaCorta(periodo.fin)}`;
+};
 const formatoFecha = valor => /* Convierte una fecha ISO al formato visible en Argentina. */
   new Date(valor + 'T12:00:00-03:00').toLocaleDateString('es-AR', {
     day: 'numeric',
@@ -49,7 +59,8 @@ function avisar(texto) {
 function bandaEstado() {
   // Lee el escenario persistido y combina su fecha con el estado de convocatoria.
   const estado = repositorio.leer();
-  return `<div class="banda-estado"><span class="estado ${estadoConvocatoria(fecha()) === 'Inscripción abierta' ? '' : 'inactivo'}"><i></i>${estadoConvocatoria(fecha())}</span><span>1 al 30 de octubre de 2026</span><a href="#demo">${estado.escenario === 'real' ? 'Reloj real' : 'Fecha simulada: ' + fecha().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })} <span aria-hidden="true">↗</span></a></div>`;
+  const periodo = periodoActual();
+  return `<div class="banda-estado"><span class="estado ${estadoConvocatoria(fecha(), periodo) === 'Inscripción abierta' ? '' : 'inactivo'}"><i></i>${estadoConvocatoria(fecha(), periodo)}</span><span>${rangoConvocatoria(periodo)}</span><a href="#demo">${estado.escenario === 'real' ? 'Reloj real' : 'Fecha simulada: ' + fecha().toLocaleDateString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires' })} <span aria-hidden="true">↗</span></a></div>`;
 }
 function tarjetaCharla(charla) {
   // Completa los datos de la charla con su sede y calcula si ya ocurrió.
@@ -117,7 +128,7 @@ function resumen(datos) {
 }
 function inscripcion() {
   // Primero bloquea el alta fuera de plazo; abierta la convocatoria, muestra el paso actual.
-  if (estadoConvocatoria(fecha()) !== 'Inscripción abierta') return `${bandaEstado()}<section class="seccion"><div class="panel-centrado"><span class="icono-cuadro">◷</span><h1>${estadoConvocatoria(fecha())}</h1><p>El período de inscripción va del 1 al 30 de octubre de 2026, inclusive (hora de Argentina).</p><p>Podés seguir consultando las charlas y sus sedes.</p><a class="boton oscuro" href="#charlas">Consultar charlas →</a><a class="volver" href="#demo">Cambiar escenario de demostración</a></div></section>`;
+  if (estadoConvocatoria(fecha(), periodoActual()) !== 'Inscripción abierta') return `${bandaEstado()}<section class="seccion"><div class="panel-centrado"><span class="icono-cuadro">◷</span><h1>${estadoConvocatoria(fecha(), periodoActual())}</h1><p>El período de inscripción va del ${rangoConvocatoria(periodoActual())}, inclusive (hora de Argentina).</p><p>Podés seguir consultando las charlas y sus sedes.</p><a class="boton oscuro" href="#charlas">Consultar charlas →</a><a class="volver" href="#demo">Cambiar escenario de demostración</a></div></section>`;
   return `${bandaEstado()}<section class="seccion inscripcion-grilla"><div class="panel formulario-panel"><p class="sobretexto">PASO ${paso} DE 3</p><h2>${['Completa el formulario de postulacion', 'Contanos un poco más.', 'Todo listo para revisar.'][paso - 1]}</h2><p class="texto-secundario">${paso === 3 ? 'Revisá la información antes de registrar tu solicitud.' : 'Los campos con * son obligatorios.'}</p><form id="formulario" novalidate><div id="error-formulario" role="alert" class="error-general" tabindex="-1"></div>${paso === 1 ? `<div class="campos">${campo('nombre', 'Nombre', 'text', 'autocomplete="given-name" maxlength="120"')}${campo('apellido', 'Apellido', 'text', 'autocomplete="family-name" maxlength="120"')}${campo('dni', 'DNI', 'text', 'inputmode="numeric" maxlength="12" placeholder="Ej. 30555666"')}${campo('nacimiento', 'Fecha de nacimiento', 'date', 'min="1900-01-01" max="' + fecha().toISOString().slice(0, 10) + '"')}<label class="ancho">Distrito electoral <span class="requerido">*</span><select name="distrito" id="distrito" aria-describedby="error-distrito">${opciones(distritos, borrador.distrito, 'Seleccioná tu distrito')}</select><small class="error-campo" id="error-distrito"></small></label><div class="ancho">${campo('direccion', 'Dirección actual', 'text', 'autocomplete="street-address" maxlength="120" placeholder="Calle, número, localidad y provincia"')}</div>${campo('telefono', 'Teléfono', 'tel', 'autocomplete="tel" maxlength="24" placeholder="Ej. 11 5555 1234"')}${campo('correo', 'Correo electrónico', 'email', 'autocomplete="email" maxlength="180" placeholder="nombre@ejemplo.com"')}</div>` : paso === 2 ? `${pregunta('experiencia', '¿Ya fuiste autoridad de mesa?')}${pregunta('capacitacion', '¿Cumpliste la capacitación?')}${pregunta('afiliacion', '¿Estás afiliado/a a una agrupación política?')}<div id="campo-partido" ${borrador.afiliacion === 'si' ? '' : 'hidden'}>${campo('partido', 'Partido o agrupación', 'text', 'maxlength="120"')}</div><fieldset class="intereses"><legend>¿Te interesa alguna charla?</legend><p>Opcional. Indicar interés no reserva un lugar ni es requisito para postularte.</p>${charlas.map(c => `<label class="opcion-charla"><input type="checkbox" name="intereses" value="${c.id}" ${borrador.intereses.includes(c.id) ? 'checked' : ''}><span><b>${c.nombre}</b><small>${formatoFecha(c.fecha)} · ${c.hora} h · ${sedeDe(c).nombre}</small></span></label>`).join('')}<small class="error-campo" id="error-intereses"></small></fieldset>` : `${resumen(borrador)}<button type="button" class="enlace-boton" id="editar-datos">Editar mis datos</button><div class="aviso verde">Al enviar se registra una postulación pendiente de evaluación. No implica una designación como autoridad de mesa.</div>`}<div class="acciones-formulario">${paso > 1 ? '<button type="button" class="boton borde" id="anterior">← Volver</button>' : ''}<button type="submit" class="boton oscuro">${paso === 3 ? 'Enviar postulación' : 'Continuar'} <span aria-hidden="true">→</span></button></div></form></div></section>`;
 }
 
@@ -125,7 +136,7 @@ function inscripcion() {
 function miSolicitud() {
   // Busca por ultimaId en el estado local y construye el comprobante correspondiente.
   const estado = repositorio.leer();
-  const solicitud = estado.solicitudes.find(s => s.id === estado.ultimaId);
+  const solicitud = estado.inscripciones.find(s => s.id === estado.ultimaId);
   if (!solicitud) return `<section class="seccion"><div class="panel-centrado"><h1>Mi solicitud</h1><p>Todavía no registraste una postulación en este navegador.</p><a class="boton oscuro" href="#inscripcion">Quiero postularme</a></div></section>`;
   const motivo = solicitud.estado === 'Rechazada' && solicitud.motivo
     ? `<div class="aviso"><b>Motivo del rechazo</b><p>${escapar(solicitud.motivo)}</p></div>`
@@ -135,21 +146,30 @@ function miSolicitud() {
 function demo() {
   // Toma el estado persistido para mostrar el escenario y los registros de prueba.
   const estado = repositorio.leer();
+  const periodo = periodoActual();
+  const inscripcionesPeriodo = estado.inscripciones.filter(inscripcion => inscripcion.convocatoriaId === periodo.id);
+  const convocatoriaCerrada = estadoConvocatoria(fecha(), periodo) === 'Convocatoria cerrada';
   return `<section class="seccion">
     <div class="demo-grilla">
       <section class="panel">
-        <h2>Rango de inscripción</h2>
+        <h2>Convocatoria y período</h2>
+        <label>Convocatoria
+          <select id="convocatoria">
+            ${convocatorias.map(item => `<option value="${item.id}" ${item.id === periodo.id ? 'selected' : ''}>${item.nombre}</option>`).join('')}
+          </select>
+        </label>
+        <p class="texto-secundario">${rangoConvocatoria(periodo)}</p>
         <label>Escenario de convocatoria
           <select id="escenario">
             ${[
-              ['abierta', 'Abierta · 6 de octubre de 2026'],
-              ['futura', 'Todavía no abrió · 28 de septiembre de 2026'],
-              ['cerrada', 'Cerrada · 31 de octubre de 2026'],
+              ['abierta', 'Abierta · día 6 del período'],
+              ['futura', 'Todavía no abrió · día anterior al inicio'],
+              ['cerrada', 'Cerrada · día posterior al cierre'],
               ['real', 'Usar fecha y hora reales'],
             ].map(([id, nombre]) => `<option value="${id}" ${estado.escenario === id ? 'selected' : ''}>${nombre}</option>`).join('')}
           </select>
         </label>
-        <div class="aviso verde">Estado actual: <b>${estadoConvocatoria(fecha())}</b></div>
+        <div class="aviso verde">Estado actual: <b>${estadoConvocatoria(fecha(), periodo)}</b></div>
         <a class="boton oscuro" href="#inscripcion">Probar inscripción</a>
       </section>
       <section class="panel">
@@ -164,13 +184,13 @@ function demo() {
     </div>
     <section class="panel registros">
       <div class="titulo-seccion">
-        <h2>Postulaciones locales</h2>
-        <span class="etiqueta">${estado.solicitudes.length} registros</span>
+        <h2>Inscripciones · ${escapar(periodo.nombre)}</h2>
+        <span class="etiqueta">${inscripcionesPeriodo.length} registros</span>
       </div>
       <div class="tabla-contenedor">
         <table>
           <thead><tr><th>Postulante</th><th>DNI</th><th>Distrito</th><th>Estado</th><th>Acción</th></tr></thead>
-          <tbody>${estado.solicitudes.map(s => `<tr><td><b>${escapar(s.nombre)} ${escapar(s.apellido)}</b><small>${s.ejemplo ? 'Dato de ejemplo' : escapar(s.id)}</small></td><td>${escapar(s.dni)}</td><td>${escapar(s.distrito)}</td><td><span class="etiqueta">${escapar(s.estado)}</span></td><td><button type="button" class="boton borde pequeno" data-ver-postulacion="${escapar(s.id)}">Ver postulación</button></td></tr>`).join('')}</tbody>
+          <tbody>${inscripcionesPeriodo.map(s => `<tr><td><b>${escapar(s.nombre)} ${escapar(s.apellido)}</b><small>${s.ejemplo ? 'Dato de ejemplo' : escapar(s.id)}</small></td><td>${escapar(s.dni)}</td><td>${escapar(s.distrito)}</td><td><span class="etiqueta">${escapar(s.estado)}</span></td><td><button type="button" class="boton borde pequeno" data-ver-postulacion="${escapar(s.id)}" ${convocatoriaCerrada ? '' : 'disabled title="Disponible cuando cierre la convocatoria"'}>Ver postulación</button>${convocatoriaCerrada ? '' : '<small>Disponible al cierre</small>'}</td></tr>`).join('') || '<tr><td colspan="5">Todavía no hay inscripciones para este período.</td></tr>'}</tbody>
         </table>
       </div>
     </section>
@@ -184,7 +204,12 @@ function demo() {
 }
 
 function abrirRevisionSolicitud(id) {
-  const solicitud = repositorio.leer().solicitudes.find(registro => registro.id === id);
+  if (estadoConvocatoria(fecha(), periodoActual()) !== 'Convocatoria cerrada') {
+    avisar('La revisión estará disponible cuando cierre la convocatoria.');
+    return;
+  }
+
+  const solicitud = repositorio.leer().inscripciones.find(registro => registro.id === id);
   if (!solicitud) return;
 
   const dialogo = document.querySelector('#dialogo-postulacion');
@@ -203,7 +228,7 @@ function abrirRevisionSolicitud(id) {
 
 function resolverSolicitud(id, nuevoEstado, motivo = '') {
   try {
-    resolverSolicitudDominio(id, nuevoEstado, motivo, repositorio);
+    resolverSolicitudDominio(id, nuevoEstado, motivo, repositorio, periodoActual());
     document.querySelector('#dialogo-postulacion').close();
     renderizar(false);
     avisar(
@@ -316,7 +341,7 @@ function conectarFormulario() {
     const boton = formulario.querySelector('[type="submit"]');
     boton.disabled = true;
     try {
-      registrarSolicitud(borrador, repositorio, fecha());
+      registrarSolicitud(borrador, repositorio, fecha(), periodoActual());
       borrador = { intereses: [] }; paso = 1;
       location.hash = '#mi-solicitud';
       avisar('Tu postulación se registró correctamente.');
@@ -351,6 +376,13 @@ function renderizar(enfocar = true) {
   }
   if (actual === 'demo') conectarRevisionPostulaciones();
   conectarFormulario();
+  document.querySelector('#convocatoria')?.addEventListener('change', e => {
+    try {
+      repositorio.guardar({ ...repositorio.leer(), convocatoriaId: e.target.value });
+      renderizar(false);
+      avisar('Convocatoria de demostración actualizada.');
+    } catch (error) { avisar(error.message); renderizar(false); }
+  });
   document.querySelector('#escenario')?.addEventListener('change', e => {
     // Persiste el escenario elegido y vuelve a renderizar con la fecha correspondiente.
     try { repositorio.guardar({ ...repositorio.leer(), escenario: e.target.value }); renderizar(false); avisar('Escenario actualizado.'); }

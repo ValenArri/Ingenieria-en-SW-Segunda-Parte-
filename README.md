@@ -38,9 +38,9 @@ En GitHub Pages solo se sirven archivos estáticos: **no se ejecuta el servidor 
 - Búsqueda por nombre, tema o sede; filtros por distrito y por fecha.
 - Detalle con nombre y dirección de la sede y mapa interactivo externo de OpenStreetMap, sin API key.
 - Inscripción en tres pasos: datos personales, antecedentes e interés opcional, revisión y envío.
-- Validaciones, incluida fecha de nacimiento obligatoria y edad mínima de 16 años, mensajes accesibles y detección de DNI repetido en la convocatoria local.
-- Comprobante descargable en texto y recuperación de la última solicitud desde el mismo navegador.
-- Pantalla **Explorar la demo**, al pie, para revisar registros, cambiar la fecha simulada o restablecer los ejemplos con confirmación. Al rechazar una postulación, permite guardar y consultar el motivo del rechazo.
+- Validaciones, incluida fecha de nacimiento obligatoria y edad mínima de 16 años, mensajes accesibles y unicidad de inscripción por DNI y convocatoria.
+- Comprobante descargable en texto y recuperación de la última inscripción desde el mismo navegador.
+- Pantalla **Explorar la demo**, al pie, para seleccionar convocatorias 2026, 2027 y 2028, cambiar el escenario temporal y consultar las inscripciones correspondientes a cada período. La revisión se habilita al cierre de la convocatoria elegida; al rechazar, permite guardar y consultar el motivo.
 
 ## Guion rápido para presentar
 
@@ -50,8 +50,8 @@ En GitHub Pages solo se sirven archivos estáticos: **no se ejecuta el servidor 
 4. En antecedentes, marcá afiliación **Sí** para mostrar que se exige el partido. Podés cambiarlo a **No** después. La afiliación no impide postularse.
 5. Dejá las charlas sin seleccionar para demostrar que son opcionales. Revisá y enviá.
 6. Descargá el comprobante y recargá la página: la solicitud sigue guardada.
-7. En **Explorar la demo**, seleccioná el escenario **Cerrada** e intentá inscribirte.
-8. Restablecé los ejemplos para repetir la presentación.
+7. En **Explorar la demo**, seleccioná otra convocatoria para consultar sus inscripciones de ejemplo. Elegí el escenario **Cerrada** para habilitar la revisión del período; aceptá una o rechazala ingresando el motivo.
+8. Probá que la inscripción ya no se puede enviar y restablecé los ejemplos para repetir la presentación.
 
 ## Fechas y persistencia
 
@@ -59,7 +59,7 @@ La convocatoria de ejemplo va del **1/10/2026 a las 00:00 al 30/10/2026 a las 23
 
 Por defecto la aplicación simula el **6/10/2026** para que la presentación siga funcionando después de octubre. Se anuncia expresamente en la interfaz. En la demo podés elegir fecha real, antes de la apertura o después del cierre. La inscripción verifica el plazo al entrar y nuevamente al enviar; el estado también se actualiza cada 15 segundos y al volver a la pestaña. No hay un proceso servidor ejecutándose cuando se cierra el navegador.
 
-Los datos se guardan bajo la clave `mesa-abierta-v1` de **localStorage**. Persisten al recargar en el mismo origen y navegador. No se comparten con otros visitantes, dispositivos o navegadores; borrar los datos del sitio borra las solicitudes. El comprobante corresponde a la última inscripción creada en ese navegador. La vista de demo permite comprobar todos los registros locales.
+Los datos se guardan bajo la clave `mesa-abierta-v1` de **localStorage**. Persisten al recargar en el mismo origen y navegador. No se comparten con otros visitantes, dispositivos o navegadores; borrar los datos del sitio borra las inscripciones. Una persona puede inscribirse en distintas convocatorias con el mismo DNI, pero solo una vez por convocatoria. El comprobante corresponde a la última inscripción creada en ese navegador. La vista de demo permite comprobar todos los registros locales.
 
 No se guardan borradores incompletos al recargar. Si el navegador bloquea o agota el almacenamiento, el envío informa el error y no muestra una confirmación falsa. Si los datos guardados están dañados, la app avisa y vuelve a los ejemplos; el próximo guardado reemplaza ese contenido.
 
@@ -93,6 +93,6 @@ MODELO-CONCEPTUAL.md Propuesta de dominio editable en Mermaid
 npm test
 ```
 
-Incluye once pruebas de límites de convocatoria, campos inválidos, afiliación, inscripción sin charlas, revisión y rechazo de postulaciones, duplicados, persistencia, errores de guardado y recuperación. Para comprobaciones visuales: revisar inicio, agenda, mapa y formulario a 390 px y 1440 px; recorrer el guion anterior.
+Incluye diecisiete pruebas de límites y escenarios de convocatoria, campos inválidos, afiliación, edad mínima, inscripción sin charlas, unicidad por período, revisión y rechazo, persistencia, errores de guardado y recuperación/migración. Para comprobaciones visuales: revisar inicio, agenda, mapa y formulario a 390 px y 1440 px; recorrer el guion anterior.
 
 Los documentos Markdown son material de apoyo. El enunciado exige un **PDF de entrega**, que el grupo debe completar con su modelo conceptual y el apartado del flujo, e incorporar la URL real una vez publicado. Este paquete no se presenta como el PDF final de la entrega.
