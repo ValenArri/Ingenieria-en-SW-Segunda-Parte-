@@ -27,6 +27,7 @@ h1,h2,h3{font-family:Arial,sans-serif;font-weight:700;letter-spacing:0}
 .pasos-inicio>div{display:block;padding:12px 0;border-bottom:1px solid var(--linea)}
 .pasos-inicio>div>span{display:none}
 .tarjeta-charla,.panel,.mapa-tarjeta,.vacio{background:transparent;border:0;border-bottom:1px solid var(--linea);border-radius:0;box-shadow:none}
+.detalle-grilla{grid-template-columns:minmax(0,1fr)}.detalle-grilla>article{max-width:760px}
 .barra-filtros{background:transparent;border-radius:0;padding:0}
 .etiqueta,.fecha-bloque{background:transparent;border:0;border-radius:0;color:var(--tinta)}
 .estado i,.icono-cuadro,.confirmacion-icono,.micro,.nota-formulario{display:none}
