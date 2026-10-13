@@ -1,3 +1,4 @@
+import { crearAgenda } from './agenda.js';
 import { charlas, sedes, distritos, convocatoria, convocatorias } from './datos.js';
 import { crearRepositorio } from './repositorio.js';
 import { fechaActual, estadoConvocatoria, normalizar, validar, registrarSolicitud, resolverSolicitud as resolverSolicitudDominio } from './servicios.js';
@@ -12,6 +13,7 @@ const contenido = document.querySelector('#contenido');
 let borrador = { intereses: [] };
 let paso = 1;
 let filtros = { busqueda: '', distrito: '', periodo: 'todas' };
+let agenda = null;
 
 // Utilidades compartidas por las vistas.
 const escapar = texto =>
@@ -74,8 +76,26 @@ function inicio() {
   <section class="seccion"><div class="titulo-seccion"><h2>Charlas</h2><a class="enlace-flecha" href="#charlas">Ver todas las charlas</a></div><p class="texto-secundario">Charlas abiertas y gratuitas; no necesitás asistir para postularte.</p><div class="grilla-charlas">${charlas.filter(c => new Date(c.fecha + 'T' + c.hora + ':00-03:00') >= fecha()).slice(0, 3).map(tarjetaCharla).join('') || '<p class="vacio">Finalizaron los encuentros de esta convocatoria. Podés consultar toda la agenda.</p>'}</div></section>`;
 }
 function listaCharlas() {
-  // Prepara los filtros con los valores actuales y deja contenedores para los resultados.
-  return `${bandaEstado()}<section class="encabezado-pagina"><h1>Charlas</h1></section><section class="seccion sin-superior"><div class="barra-filtros"><label class="buscador">Buscar charla o sede<input id="busqueda" type="search" placeholder="Nombre, tema o sede…" value="${escapar(filtros.busqueda)}"></label><label>Distrito<select id="filtro-distrito">${opciones([...new Set(sedes.map(s => s.distrito))], filtros.distrito, 'Todos los distritos')}</select></label><label>Fecha<select id="filtro-periodo"><option value="todas" ${filtros.periodo === 'todas' ? 'selected' : ''}>Todas las charlas</option><option value="proximas" ${filtros.periodo === 'proximas' ? 'selected' : ''}>Próximas charlas</option><option value="pasadas" ${filtros.periodo === 'pasadas' ? 'selected' : ''}>Charlas finalizadas</option></select></label></div><p id="cantidad" class="texto-secundario" role="status"></p><div id="lista-charlas" class="grilla-charlas"></div></section>`;
+  return `${bandaEstado()}<section class="explorador-charlas">
+    <div class="cabecera-agenda"><div><h1>Charlas y sedes</h1><p>Encontrá un encuentro y explorá dónde se realiza.</p></div><span class="etiqueta">Entrada libre · Sin inscripción previa</span></div>
+    <div class="agenda-dividida">
+      <aside class="panel-agenda" aria-label="Listado y filtros de charlas">
+        <div class="filtros-agenda">
+          <label>Buscar charla o sede<input id="busqueda" type="search" placeholder="Nombre, tema o sede…" value="${escapar(filtros.busqueda)}"></label>
+          <div class="selectores-agenda"><label>Distrito<select id="filtro-distrito">${opciones([...new Set(sedes.map(s => s.distrito))], filtros.distrito, 'Todos los distritos')}</select></label>
+          <label>Fecha<select id="filtro-periodo"><option value="todas" ${filtros.periodo === 'todas' ? 'selected' : ''}>Todas las charlas</option><option value="proximas" ${filtros.periodo === 'proximas' ? 'selected' : ''}>Próximas charlas</option><option value="pasadas" ${filtros.periodo === 'pasadas' ? 'selected' : ''}>Charlas finalizadas</option></select></label></div>
+          <p id="cantidad" role="status"></p>
+        </div>
+        <div id="lista-charlas" class="resultados-agenda" role="region" aria-label="Resultados de charlas" tabindex="0"></div>
+      </aside>
+      <section class="panel-mapa" aria-label="Mapa de las charlas">
+        <div class="herramientas-mapa"><span id="cantidad-mapa"></span><button type="button" id="ver-todas-sedes" class="boton borde pequeno">Ver todas las sedes</button></div>
+        <p id="seleccion-charla" class="estado-seleccion" role="status"></p>
+        <div class="superficie-mapa"><div id="mapa-charlas" aria-label="Mapa interactivo. Usá los marcadores para seleccionar una charla."></div><p id="aviso-mapa" class="aviso-mapa" role="status" hidden></p></div>
+        <p class="pie-agenda">Arrastrá para moverte y usá + / − para acercar o alejar. Los números vinculan cada charla con su marcador.</p>
+      </section>
+    </div>
+  </section>`;
 }
 function actualizarCharlas() {
   // Normaliza la búsqueda y aplica en conjunto texto, distrito y estado temporal.
@@ -84,9 +104,9 @@ function actualizarCharlas() {
     const sede = sedeDe(c);
     const pasada = new Date(c.fecha + 'T' + c.hora + ':00-03:00') < fecha();
     const textoCharla = normalizarTexto(
-      `${c.nombre} ${c.tema} ${sede.nombre} ${sede.direccion}`,
+      `${c.nombre} ${c.tema} ${sede?.nombre || ''} ${sede?.direccion || ''}`,
     );
-    const coincideDistrito = !filtros.distrito || sede.distrito === filtros.distrito;
+    const coincideDistrito = !filtros.distrito || sede?.distrito === filtros.distrito;
     const coincideBusqueda = textoCharla.includes(consulta);
     const coincidePeriodo =
       filtros.periodo === 'todas' ||
@@ -96,7 +116,7 @@ function actualizarCharlas() {
   });
 
   document.querySelector('#cantidad').textContent = `${resultado.length} ${resultado.length === 1 ? 'charla encontrada' : 'charlas encontradas'}`;
-  document.querySelector('#lista-charlas').innerHTML = resultado.map(tarjetaCharla).join('') || '<div class="vacio"><h3>No encontramos charlas con esos filtros.</h3><p>Probá con otro nombre o distrito.</p><button class="boton borde" id="limpiar-filtros">Limpiar filtros</button></div>';
+  agenda.actualizar(resultado);
 
   document.querySelector('#limpiar-filtros')?.addEventListener('click', () => {
     filtros = { busqueda: '', distrito: '', periodo: 'todas' };
@@ -360,12 +380,15 @@ function renderizar(enfocar = true) {
     demo,
   };
   // Renderiza la función de vista y sincroniza el título del documento.
+  agenda?.destruir();
+  agenda = null;
   contenido.innerHTML = (vistas[actual] || noEncontrado)();
     const tituloVista = actual === 'charla'
       ? charlas.find(charla => charla.id === id)?.nombre
       : ({ inicio: 'Postulate', charlas: 'Charlas y sedes', inscripcion: 'Postulate', 'mi-solicitud': 'Mi solicitud', demo: 'Explorar la demo' })[actual];
     document.title = `${tituloVista || 'Página no encontrada'} · Mesa Abierta`;
   if (actual === 'charlas') {
+    agenda = crearAgenda({ contenedor: contenido, sedeDe, formatoFecha, escapar, numeroDe: charla => charlas.indexOf(charla) + 1 });
     // Los controles actualizan filtros y vuelven a calcular la lista sin cambiar de ruta.
     actualizarCharlas();
     for (const [selector, clave, evento] of [['#busqueda', 'busqueda', 'input'], ['#filtro-distrito', 'distrito', 'change'], ['#filtro-periodo', 'periodo', 'change']]) document.querySelector(selector).addEventListener(evento, e => { filtros[clave] = e.target.value; actualizarCharlas(); });

@@ -1,3 +1,5 @@
+> **Actualización de Charlas y sedes:** listado y mapa sincronizados, sin claves. Consultá [CAMBIOS-MAPA.md](CAMBIOS-MAPA.md) para uso, archivos modificados y resultados de pruebas. Incluí la carpeta `vendor/leaflet` al publicar.
+
 # Mesa Abierta · Grupo 04
 
 Prueba de concepto funcional para la **Entrega TP2 de Ingeniería de Software, 2C/2026**. Portal de inscripción de postulantes a autoridad de mesa y consulta de charlas con ubicación geográfica.
